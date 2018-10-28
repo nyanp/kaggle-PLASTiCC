@@ -6,7 +6,7 @@ import logging
 import time
 import gc
 from model.postproc import *
-
+from model.model import multi_weighted_logloss
 
 class ExperimentDualModel:
     def __init__(self, basepath: str,
@@ -15,9 +15,18 @@ class ExperimentDualModel:
                  model_inner: Model,
                  model_extra: Model,
                  submit_path: str = 'output/submission.csv',
-                 log_name: str = 'default'):
+                 log_name: str = 'default',
+                 drop_feat_inner = None,
+                 drop_feat_extra = None):
 
         df = pd.read_feather(basepath + 'input/meta.f')
+
+        if submit_path is None:
+            self.submit_path = None
+            df = df[~df.target.isnull()].reset_index() # use training data only
+        else:
+            self.submit_path = basepath + submit_path
+
         df['extra'] = (df['hostgal_photoz'] > 0.0).astype(np.int32)
 
         self.df_inner = df[df.extra == 0].reset_index(drop=True)
@@ -29,19 +38,20 @@ class ExperimentDualModel:
         self.fh = logging.FileHandler(basepath+log_name+'.log')
         self.fh.setLevel(logging.DEBUG)
         self.logger.addHandler(self.fh)
-        self.submit_path = basepath + submit_path
 
         self.logger.info('load features...')
-        self.df_inner = self._setup(self.df_inner, features_inner, basepath)
+        self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner)
         gc.collect()
-        self.df_extra = self._setup(self.df_extra, features_extra, basepath)
+        self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra)
         gc.collect()
 
-    def _setup(self, df, features, basepath) -> pd.DataFrame:
+    def _setup(self, df, features, basepath, drop) -> pd.DataFrame:
         for f in tqdm(features):
             tmp = pd.read_feather(basepath + 'features/' + str(f) + '.f')
 
             df = pd.merge(df, tmp, on='object_id', how='left')
+        if drop is not None:
+            df.drop(drop, axis=1, inplace=True)
         return df
 
     def _exec(self, name, df, model):
@@ -60,14 +70,18 @@ class ExperimentDualModel:
 
         self.logger.info('training time: {}'.format(time.time() - s))
 
-        return pred
+        oof, y = model.get_oof_prediction()
+        return pred, oof, y
 
     def execute(self):
-        pred_inner = self._exec('inner', self.df_inner, self.model_inner)
-        pred_extra = self._exec('extra', self.df_extra, self.model_extra)
+        pred_inner, oof_inner, y_inner = self._exec('inner', self.df_inner, self.model_inner)
+        pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra)
 
         pred_all = pd.concat([pred_inner, pred_extra]).fillna(0)
         pred_all = add_class99(pred_all)
+
+        #oof_score = multi_weighted_logloss(pd.concat([y_inner, y_outer]), pd.concat([oof_inner, oof_outer]))
+        #self.logger.info('oof score(inner + extra): {}'.format(oof_score))
 
         submit(pred_all, self.submit_path)
 

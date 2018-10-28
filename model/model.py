@@ -1,4 +1,4 @@
-
+from typing import List
 import pandas as pd
 import numpy as np
 import time
@@ -14,12 +14,18 @@ from .problem import *
 
 def lgb_multi_weighted_logloss(y_true, y_preds):
 
-    if len(np.unique(y_true)) > 14:
+    if len(np.unique(y_true)) == 15:
         weight = class_weight_with_other
         cls = classes_with_other
-    else:
+    elif len(np.unique(y_true)) == 14:
         weight = class_weight
         cls = classes
+    elif len(np.unique(y_true)) == 9:
+        weight = class_weight_out
+        cls = classes_out
+    else:
+        weight = class_weight_in
+        cls = classes_in
 
     y_p = y_preds.reshape(y_true.shape[0], len(cls), order='F')
     y_ohe = pd.get_dummies(y_true)
@@ -36,10 +42,14 @@ def lgb_multi_weighted_logloss(y_true, y_preds):
 
 def multi_weighted_logloss(y_true, y_preds):
 
-    if len(np.unique(y_true)) > 14:
+    if len(np.unique(y_true)) == 15:
         weight = class_weight_with_other
-    else:
+    elif len(np.unique(y_true)) == 14:
         weight = class_weight
+    elif len(np.unique(y_true)) == 9:
+        weight = class_weight_out
+    else:
+        weight = class_weight_in
 
     y_p = y_preds
     y_ohe = pd.get_dummies(y_true)
@@ -73,6 +83,8 @@ class Model:
         x_train.set_index(index, inplace=True)
         x_test.set_index(index, inplace=True)
 
+        assert 'index' not in x_train
+
         return x_train, y_train, x_test
 
     def fit_predict(self, df: pd.DataFrame, logger = None) -> pd.DataFrame:
@@ -90,6 +102,9 @@ class Model:
         raise NotImplementedError()
 
     def score(self) -> float:
+        raise NotImplementedError()
+
+    def scores(self) -> List[float]:
         raise NotImplementedError()
 
     def name(self):

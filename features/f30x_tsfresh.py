@@ -3,13 +3,17 @@ from tsfresh import extract_features
 from .common import *
 from tsfresh.feature_extraction.feature_calculators import number_peaks
 from itertools import product
+import numpy as np
 
 def postproc(ext):
     ext.reset_index(inplace=True)
+
     ext = pd.concat([ext, ext['id'].str.split('_', expand=True)], axis=1)
     ext.rename(columns={0: 'object_id', 1: 'passband'}, inplace=True)
+    ext['object_id'] = ext['object_id'].astype(np.int64)
+    ext['passband'] = ext['passband'].astype(np.int64)
     ext.drop('id',axis=1, inplace=True)
-    print(ext.head())
+
     return unstack(ext)
 
 @feature('f300')

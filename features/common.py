@@ -3,6 +3,7 @@ import time
 from termcolor import colored
 import traceback
 import gc
+import numpy as np
 
 
 class Input:
@@ -48,9 +49,7 @@ def diff_among_ch(meta: pd.DataFrame, agg, target='flux', skip=1):
     return meta[['object_id'] + cols]
 
 
-
-
-def requires(meta, feature_name, src_file, target_dir, on='object_id', debug=False):
+def requires_one(meta, feature_name, src_file, target_dir, on='object_id', debug=False):
     if feature_name in meta:
         if debug:
             print('{} already found. skipped'.format(feature_name))
@@ -68,6 +67,27 @@ def requires(meta, feature_name, src_file, target_dir, on='object_id', debug=Fal
     return meta
 
 
+def requires(meta, feature_name, src_file, target_dir, on='object_id', debug=False):
+    if isinstance(feature_name, list):
+        for i, f in enumerate(feature_name):
+            meta = requires_one(meta, f, src_file[i], target_dir, on, debug)
+        return meta
+    else:
+        return requires_one(meta, feature_name, src_file, target_dir, on, debug)
+
+
+def percentile(n):
+    def percentile_(x):
+        return np.percentile(x, n)
+    percentile_.__name__ = 'percentile_{}'.format(n)
+    return percentile_
+
+def _top(f):
+    if isinstance(f, list):
+        return f[0]
+    else:
+        return f
+
 def feature(name, required_feature=None, required_feature_in=None):
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -76,7 +96,7 @@ def feature(name, required_feature=None, required_feature_in=None):
                 s = time.time()
 
                 meta = kwargs['input'].meta
-                if required_feature is not None and required_feature not in meta:
+                if required_feature is not None and _top(required_feature) not in meta:
                     kwargs['input'].meta = requires(meta, required_feature, required_feature_in, kwargs['target_dir'], debug=kwargs['debug'])
 
                 ret = func(*args, **kwargs)

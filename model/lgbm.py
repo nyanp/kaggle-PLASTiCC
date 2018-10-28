@@ -2,7 +2,6 @@ from .model import *
 import pandas as pd
 import numpy as np
 
-
 class LGBMModel(Model):
     def __init__(self, param = None, random_state = 1, nfolds = 5):
 
@@ -43,6 +42,7 @@ class LGBMModel(Model):
         return d
 
     def fit(self, x, y, logger = None):
+
         folds = StratifiedKFold(n_splits=self.nfolds, shuffle=True, random_state=self.random_state)
         feature_importance_df = pd.DataFrame()
         self.n_classes = y.nunique()
@@ -50,6 +50,7 @@ class LGBMModel(Model):
         oof_preds = np.zeros((x.shape[0], self.n_classes))
 
         logger.info('train: {}'.format(x.shape))
+        print('train: {}'.format(x.shape))
 
         score = []
         clfs = []
@@ -87,7 +88,7 @@ class LGBMModel(Model):
         full_auc = multi_weighted_logloss(y, oof_preds)
         logger.info('*** full auc: {}'.format(full_auc))
 
-        score.append(full_auc)
+        self.scores_ = score
         self.score_ = full_auc
         self.feature_importance_ = feature_importance_df
         self.clfs = clfs
@@ -109,6 +110,9 @@ class LGBMModel(Model):
 
     def score(self):
         return self.score_
+
+    def scores(self):
+        return self.scores_
 
     def feature_importances(self):
         return self.feature_importance_
