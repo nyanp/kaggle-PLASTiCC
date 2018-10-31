@@ -74,6 +74,9 @@ class Model:
             if df[c].dtype == 'object':
                 df[c] = df[c].astype('category')
 
+        if 'index' in df:
+            df.drop('index', axis=1, inplace=True)
+
         x_train = df[~df[target].isnull()]
         x_test = df[df[target].isnull()]
         y_train = x_train[target].astype(np.int32)

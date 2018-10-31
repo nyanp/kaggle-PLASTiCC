@@ -17,7 +17,8 @@ class ExperimentDualModel:
                  submit_path: str = 'output/submission.csv',
                  log_name: str = 'default',
                  drop_feat_inner = None,
-                 drop_feat_extra = None):
+                 drop_feat_extra = None,
+                 logging_level = logging.DEBUG):
 
         df = pd.read_feather(basepath + 'input/meta.f')
 
@@ -34,9 +35,9 @@ class ExperimentDualModel:
         self.model_inner = model_inner
         self.model_extra = model_extra
         self.logger = logging.getLogger(log_name)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging_level)
         self.fh = logging.FileHandler(basepath+log_name+'.log')
-        self.fh.setLevel(logging.DEBUG)
+        self.fh.setLevel(logging_level)
         self.logger.addHandler(self.fh)
 
         self.logger.info('load features...')
@@ -63,12 +64,21 @@ class ExperimentDualModel:
 
         if self.submit_path is None:
             x_train, y_train, _ = model.prep(df)
-            model.fit(x_train, y_train)
+            model.fit(x_train, y_train, self.logger)
             pred = None
         else:
             pred = model.fit_predict(df, self.logger)
 
         self.logger.info('training time: {}'.format(time.time() - s))
+
+        importance = model.feature_importances()
+
+        fi = importance.groupby('feature')['importance'].mean().reset_index()
+        fi.sort_values(by='importance', ascending=False, inplace=True)
+        fi = fi.reset_index(drop=True)
+        self.logger.debug('importance:')
+        for i in range(10):
+            self.logger.debug('{} : {}'.format(fi.loc[i, 'feature'], fi.loc[i, 'importance']))
 
         oof, y = model.get_oof_prediction()
         return pred, oof, y
@@ -77,13 +87,10 @@ class ExperimentDualModel:
         pred_inner, oof_inner, y_inner = self._exec('inner', self.df_inner, self.model_inner)
         pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra)
 
-        pred_all = pd.concat([pred_inner, pred_extra]).fillna(0)
-        pred_all = add_class99(pred_all)
-
-        #oof_score = multi_weighted_logloss(pd.concat([y_inner, y_outer]), pd.concat([oof_inner, oof_outer]))
-        #self.logger.info('oof score(inner + extra): {}'.format(oof_score))
-
-        submit(pred_all, self.submit_path)
+        if self.submit_path is not None:
+            pred_all = pd.concat([pred_inner, pred_extra]).fillna(0)
+            pred_all = add_class99(pred_all)
+            submit(pred_all, self.submit_path)
 
 
 

@@ -4,12 +4,19 @@ import pandas as pd
 import gc
 import numpy as np
 
-baseline_features = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110']
+baseline_features = ['f000', 'f202', 'f100', 'f002', 'f201', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
+                     'f303', 'f304', 'f026', 'f050', 'f400']
 
 additional_features = [
+   'f054'
+]
+
+additional_features_ = [
+    "f030", "f031",
+    "f032", "f130",
     "f001", "f101",
     "f102", "f204",
-    "f103", "f201",
+    "f103", 'f040','f041',
     'f105', 'f020', 'f021', 'f022', 'f023', 'f024', 'f025', 'f026', 'f027', 'f028', 'f029',
     'f120', 'f121', 'f122', 'f123'
 ]
@@ -38,9 +45,9 @@ def beats(old_score, old_scores, new_score, new_scores):
     return False
 
 
-def fs_per_file(n_loop:int = 10):
+def fs_per_file(n_loop:int = 10, log='log_fs'):
     for i in range(n_loop):
-        baseline = Experiment('./', baseline_features, LGBMModel(), None, 'log_fs', drop_feat=drop_feat)
+        baseline = Experiment('./', baseline_features, LGBMModel(), None, log, drop_feat=drop_feat)
         baseline.execute()
 
         baseline_score = baseline.score
@@ -51,7 +58,7 @@ def fs_per_file(n_loop:int = 10):
         best_feat = None
 
         for additional in additional_features:
-            exp = Experiment('./', baseline_features + [additional], LGBMModel(), None, 'log_fs', drop_feat=drop_feat)
+            exp = Experiment('./', baseline_features + [additional], LGBMModel(), None, log, drop_feat=drop_feat)
             exp.execute()
 
             exp_score = exp.score
@@ -137,6 +144,6 @@ def fs_per_column(n_loop:int = 100):
             features.drop(best_feat, axis=1, inplace=True)
 
 
-fs_per_file(10)
-fs_per_column(100)
+fs_per_file(1, 'log_fs_181030')
+#fs_per_column(100)
 

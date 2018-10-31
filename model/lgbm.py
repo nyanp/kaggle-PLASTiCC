@@ -42,6 +42,9 @@ class LGBMModel(Model):
         return d
 
     def fit(self, x, y, logger = None):
+        for c in x:
+            if x[c].count() == 0:
+                raise RuntimeError('#### column {} has no valid value!'.format(c))
 
         folds = StratifiedKFold(n_splits=self.nfolds, shuffle=True, random_state=self.random_state)
         feature_importance_df = pd.DataFrame()

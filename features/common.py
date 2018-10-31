@@ -7,10 +7,11 @@ import numpy as np
 
 
 class Input:
-    def __init__(self, meta, passband, lc):
+    def __init__(self, meta, passband, lc, lombscargle):
         self.meta = meta
         self.passband = passband
         self.lc = lc
+        self.ls = lombscargle
 
 
 
@@ -24,9 +25,13 @@ def unstack(aggs):
     return aggs
 
 
-def aggregate_by_id_passbands(lc, col, agg):
+def aggregate_by_id_passbands(lc, col, agg, columns=None):
     aggs = lc.groupby(['object_id', 'passband'])[col].agg(agg)
-    aggs.columns = [e + '(' + col + ')' for e in aggs.columns]
+
+    if columns is not None:
+        aggs.columns = columns
+    else:
+        aggs.columns = [e + '(' + col + ')' for e in aggs.columns]
     return unstack(aggs)
 
 

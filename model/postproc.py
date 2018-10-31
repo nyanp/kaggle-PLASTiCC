@@ -29,6 +29,17 @@ def add_class99(pred: pd.DataFrame) -> pd.DataFrame:
 
     return pred
 
+def add_class99_2(pred: pd.DataFrame) -> pd.DataFrame:
+    pred['class_99'] = 1
+    for c in pred:
+        if c == 'class_99' or c == 'object_id':
+            continue
+        pred['class_99'] *= (1 - pred[c])
+
+    pred['class_99'] += (pred['class_16'] > 0).astype(np.int32)
+
+    return pred
+
 
 def submit(pred: pd.DataFrame, path: str):
     if 'object_id' in pred:
