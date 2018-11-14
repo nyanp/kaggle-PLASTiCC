@@ -6,7 +6,7 @@ from .loss import *
 import functools
 
 class LGBMModel(Model):
-    def __init__(self, param = None, random_state = 1, nfolds = 5, use_weight = False):
+    def __init__(self, param = None, random_state = 1, nfolds = 5, weight_mode='none'):
 
         if param is None:
             self.param =  {
@@ -34,7 +34,7 @@ class LGBMModel(Model):
         self.feature_importance_ = None
         self.score_ = None
         self.nfolds = nfolds
-        self.use_weight = use_weight
+        self.weight_mode = weight_mode
 
     def get_params(self):
         d = {
@@ -65,21 +65,32 @@ class LGBMModel(Model):
 
         self.param['num_class'] = n_classes
 
+        if self.weight_mode == 'simple':
+            w_train = np.array([class_weight[i] / 2.0 for i in y])
+        elif self.weight_mode == 'weighted':
+            values = y.value_counts()
+            n = {v: values[v] for v in values.index}
+            w_train = np.array([class_weight[i]/n[i] for i in y])
+            w_train /= w_train.mean()
+        else:
+            assert self.weight_mode == 'none'
+            w_train = None
+
         for n_fold, (train_idx, valid_idx) in enumerate(folds.split(x, y)):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
             valid_x, valid_y = x.iloc[valid_idx], y.iloc[valid_idx]
 
-            if self.use_weight:
-                w_train = [class_weight[i]/2.0 for i in train_y]
+            if w_train is not None:
+                sample_weight = w_train[train_idx]
             else:
-                w_train = None
+                sample_weight = None
 
             print(train_x.shape)
 
             # LightGBM parameters found by Bayesian optimization
             clf = LGBMClassifier(**self.param)
 
-            clf.fit(train_x, train_y, sample_weight=w_train, eval_set=[(valid_x, valid_y)],
+            clf.fit(train_x, train_y, sample_weight=sample_weight, eval_set=[(valid_x, valid_y)],
                     eval_metric=lgb_multi_weighted_logloss, verbose=-1, early_stopping_rounds=100)
 
             oof_preds[valid_idx, :] = clf.predict_proba(valid_x, num_iteration=clf.best_iteration_)
