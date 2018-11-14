@@ -5,10 +5,10 @@ import gc
 import numpy as np
 
 baseline_features = ['f000', 'f202', 'f100', 'f002', 'f201', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-                     'f303', 'f304', 'f026', 'f050', 'f400']
+                     'f303', 'f304', 'f026', 'f050', 'f400','f140','f141','f142','f143','f144']
 
 additional_features = [
-   'f054'
+   'f106','f107','f108','f109'
 ]
 
 additional_features_ = [
@@ -28,7 +28,7 @@ eltwise_feature_tables = [
 ]
 
 
-drop_feat=['hostgal_specz', 'ra', 'decl']
+drop_feat=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b']
 
 # per-file feature selection
 
@@ -144,6 +144,6 @@ def fs_per_column(n_loop:int = 100):
             features.drop(best_feat, axis=1, inplace=True)
 
 
-fs_per_file(1, 'log_fs_181030')
+fs_per_file(1, 'log_fs_181101')
 #fs_per_column(100)
 

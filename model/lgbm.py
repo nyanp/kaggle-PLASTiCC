@@ -1,9 +1,12 @@
 from .model import *
 import pandas as pd
 import numpy as np
+from .problem import class_weight
+from .loss import *
+import functools
 
 class LGBMModel(Model):
-    def __init__(self, param = None, random_state = 1, nfolds = 5):
+    def __init__(self, param = None, random_state = 1, nfolds = 5, use_weight = False):
 
         if param is None:
             self.param =  {
@@ -22,7 +25,6 @@ class LGBMModel(Model):
                 'learning_rate':0.1,
                 'max_depth':4,
                 'n_estimators':10000,
-
                 'verbose':-1
             }
         else:
@@ -32,6 +34,7 @@ class LGBMModel(Model):
         self.feature_importance_ = None
         self.score_ = None
         self.nfolds = nfolds
+        self.use_weight = use_weight
 
     def get_params(self):
         d = {
@@ -58,16 +61,37 @@ class LGBMModel(Model):
         score = []
         clfs = []
 
+        n_classes = len(np.unique(y))
+
+        self.param['num_class'] = n_classes
+
         for n_fold, (train_idx, valid_idx) in enumerate(folds.split(x, y)):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
             valid_x, valid_y = x.iloc[valid_idx], y.iloc[valid_idx]
 
+            if self.use_weight:
+                w_train = [class_weight[i]/2.0 for i in train_y]
+            else:
+                w_train = None
+
+            print(train_x.shape)
+
             # LightGBM parameters found by Bayesian optimization
             clf = LGBMClassifier(**self.param)
-            clf.fit(train_x, train_y, eval_set=[(valid_x, valid_y)],
+
+            clf.fit(train_x, train_y, sample_weight=w_train, eval_set=[(valid_x, valid_y)],
                     eval_metric=lgb_multi_weighted_logloss, verbose=-1, early_stopping_rounds=100)
 
             oof_preds[valid_idx, :] = clf.predict_proba(valid_x, num_iteration=clf.best_iteration_)
+
+            #dtrain = lgb.Dataset(train_x, label_to_code(train_y))
+            #dvalid = lgb.Dataset(valid_x, label_to_code(valid_y))
+
+            #clf = lgb.train(params=self.param, train_set=dtrain, num_boost_round=10000, valid_sets=dvalid, fobj=obj, feval=feval, early_stopping_rounds=50,
+            #                verbose_eval=200)
+
+
+            #oof_preds[valid_idx, :] = clf.predict(valid_x, num_iteration=clf.best_iteration)
 
             fold_importance_df = pd.DataFrame()
             fold_importance_df["feature"] = x.columns.tolist()

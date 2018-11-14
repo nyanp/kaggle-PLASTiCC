@@ -14,7 +14,8 @@ class Experiment:
                  log_name: str = 'default',
                  use_feat: Dict[str, List[str]] = None,
                  drop_feat: List[str] = None,
-                 df: pd.DataFrame = None):
+                 df: pd.DataFrame = None,
+                 postproc_version: int = 1):
 
         if df is None:
             self.df = pd.read_feather(basepath + 'input/meta.f')
@@ -33,6 +34,7 @@ class Experiment:
         self.logger.setLevel(logging.DEBUG)
         self.fh = logging.FileHandler(basepath+log_name+'.log')
         self.fh.setLevel(logging.DEBUG)
+        self.postproc_version = postproc_version
 
         if len(self.logger.handlers) == 0:
             self.logger.addHandler(self.fh)
@@ -82,6 +84,12 @@ class Experiment:
         self.scores = self.model.scores()
 
     def post_proc(self, pred):
-        pred = add_class99(pred)
+
+        if self.postproc_version == 1:
+            pred = add_class99(pred)
+        elif self.postproc_version == 2:
+            pred = add_class99_2(pred)
+        else:
+            raise NotImplementedError()
         pred = filter_by_galactic_vc_extra_galactic(pred, self.df)
         return pred

@@ -34,3 +34,27 @@ def f104_max_flux_diff3_ch(input: Input, debug=True, target_dir='.'):
 def f105_percentile95_flux_diff1_ch(input: Input, debug=True, target_dir='.'):
     dst = diff_among_ch(input.meta, 'percentile_95', 'flux', 1)
     return dst
+
+
+@feature('f106', required_feature='max(flux)_ch1', required_feature_in='f000.f')
+def f106_max_flux_diff4_ch(input: Input, debug=True, target_dir='.'):
+    dst = diff_among_ch(input.meta, 'max', 'flux', 4)
+    return dst
+
+
+@feature('f107', required_feature='max(flux)_ch1', required_feature_in='f000.f')
+def f107_max_flux_diff5_ch(input: Input, debug=True, target_dir='.'):
+    dst = diff_among_ch(input.meta, 'max', 'flux', 5)
+    return dst
+
+
+@feature('f108', required_feature='min(flux)_ch1', required_feature_in='f000.f')
+def f108_min_flux_diff1_ch(input: Input, debug=True, target_dir='.'):
+    dst = diff_among_ch(input.meta, 'min', 'flux', 1)
+    return dst
+
+
+@feature('f109', required_feature='min(flux)_ch2', required_feature_in='f000.f')
+def f109_min_flux_diff1_ch(input: Input, debug=True, target_dir='.'):
+    dst = diff_among_ch(input.meta, 'min', 'flux', 2)
+    return dst

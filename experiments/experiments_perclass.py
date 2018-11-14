@@ -6,7 +6,7 @@ import logging
 import time
 import gc
 from model.postproc import *
-from model.lgbm import multi_weighted_logloss
+from model.model import multi_weighted_logloss
 
 class ExperimentDualModel:
     def __init__(self, basepath: str,
@@ -25,7 +25,7 @@ class ExperimentDualModel:
 
         if submit_path is None:
             self.submit_path = None
-            df = df[~df.target.isnull()].reset_index() # use training data only
+            df = df[~df.target.isnull()].reset_index()  # use training data only
         else:
             self.submit_path = basepath + submit_path
 
@@ -37,7 +37,7 @@ class ExperimentDualModel:
         self.model_extra = model_extra
         self.logger = logging.getLogger(log_name)
         self.logger.setLevel(logging_level)
-        self.fh = logging.FileHandler(basepath+log_name+'.log')
+        self.fh = logging.FileHandler(basepath + log_name + '.log')
         self.fh.setLevel(logging_level)
         self.logger.addHandler(self.fh)
 
@@ -87,9 +87,7 @@ class ExperimentDualModel:
         return pred, oof, y
 
     def execute(self):
-        print('exec-inner')
         pred_inner, oof_inner, y_inner = self._exec('inner', self.df_inner, self.model_inner)
-        print('exec-outer')
         pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra)
 
         if self.submit_path is not None:
