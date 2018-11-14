@@ -1,14 +1,18 @@
 from model.lgbm import LGBMModel
 from experiments.experiments import Experiment
+from experiments.experiments_dual import ExperimentDualModel
 import pandas as pd
 import gc
 import numpy as np
 
-baseline_features = ['f000', 'f202', 'f100', 'f002', 'f201', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-                     'f303', 'f304', 'f026', 'f050', 'f400','f140','f141','f142','f143','f144']
+baseline_features_inner = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
+                           'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108']
+
+baseline_features_extra = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
+                           'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f150']
 
 additional_features = [
-   'f106','f107','f108','f109'
+   'f106','f107','f108','f109','f151','f152','f153','f141','f142','f143','f144'
 ]
 
 additional_features_ = [
@@ -27,8 +31,8 @@ eltwise_feature_tables = [
     "f300", "f304", "f308", "f321", "f360",
 ]
 
-
-drop_feat=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b']
+drop_feat_inner=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'distmod', 'hostgal_photoz']
+drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b']
 
 # per-file feature selection
 
@@ -45,24 +49,50 @@ def beats(old_score, old_scores, new_score, new_scores):
     return False
 
 
-def fs_per_file(n_loop:int = 10, log='log_fs'):
+def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
+    if fs_on == 'extra':
+        baseline_features = baseline_features_extra
+        mode = 'extra-only'
+    else:
+        baseline_features = baseline_features_inner
+        mode = 'inner-only'
+
+    params = {
+        'basepath': './',
+        'features_inner': baseline_features_inner,
+        'features_extra': baseline_features_extra,
+        'model_inner': LGBMModel(weight_mode='weighted'),
+        'model_extra': LGBMModel(weight_mode='weighted'),
+        'submit_path': None,
+        'log_name': log,
+        'drop_feat_inner': drop_feat_inner,
+        'drop_feat_extra': drop_feat_extra,
+        'mode': mode
+    }
+
     for i in range(n_loop):
-        baseline = Experiment('./', baseline_features, LGBMModel(), None, log, drop_feat=drop_feat)
+        baseline = ExperimentDualModel(**params)
         baseline.execute()
 
-        baseline_score = baseline.score
-        baseline_scores = baseline.scores
+        baseline_score = baseline.score(fs_on)
+        baseline_scores = baseline.scores(fs_on)
 
         best_score = baseline_score
         best_scores = baseline_scores
         best_feat = None
 
         for additional in additional_features:
-            exp = Experiment('./', baseline_features + [additional], LGBMModel(), None, log, drop_feat=drop_feat)
+            if fs_on == 'extra':
+                params['features_extra'] = baseline_features + [additional]
+            else:
+                assert fs_on == 'inner'
+                params['features_inner'] = baseline_features + [additional]
+
+            exp = ExperimentDualModel(**params)
             exp.execute()
 
-            exp_score = exp.score
-            exp_scores = exp.scores
+            exp_score = exp.score(fs_on)
+            exp_scores = exp.scores(fs_on)
 
             if beats(best_score, best_scores, exp_score, exp_scores):
                 best_score = exp_score
@@ -144,6 +174,6 @@ def fs_per_column(n_loop:int = 100):
             features.drop(best_feat, axis=1, inplace=True)
 
 
-fs_per_file(1, 'log_fs_181101')
+fs_per_file(10, 'log_fs_181115')
 #fs_per_column(100)
 
