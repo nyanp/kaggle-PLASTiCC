@@ -25,13 +25,13 @@ def unstack(aggs):
     return aggs
 
 
-def aggregate_by_id_passbands(lc, col, agg, columns=None):
+def aggregate_by_id_passbands(lc, col, agg, columns=None, prefix=''):
     aggs = lc.groupby(['object_id', 'passband'])[col].agg(agg)
 
     if columns is not None:
         aggs.columns = columns
     else:
-        aggs.columns = [e + '(' + col + ')' for e in aggs.columns]
+        aggs.columns = [prefix + e + '(' + col + ')' for e in aggs.columns]
     return unstack(aggs)
 
 
@@ -42,12 +42,12 @@ def aggregate_by_id(lc, col, agg):
     return aggs
 
 
-def diff_among_ch(meta: pd.DataFrame, agg, target='flux', skip=1):
+def diff_among_ch(meta: pd.DataFrame, agg, target='flux', skip=1, prefix=''):
     cols = []
     for c in range(6 - skip):
-        n = '{}({})_ch{}'.format(agg, target, c + skip)
-        p = '{}({})_ch{}'.format(agg, target, c)
-        dst = 'diff({}({}))_{}_{}'.format(agg, target, c, c + skip)
+        n = prefix+'{}({})_ch{}'.format(agg, target, c + skip)
+        p = prefix+'{}({})_ch{}'.format(agg, target, c)
+        dst = prefix+'diff({}({}))_{}_{}'.format(agg, target, c, c + skip)
         meta[dst] = meta[n] - meta[p]
         cols.append(dst)
 

@@ -5,6 +5,9 @@ import pandas as pd
 import gc
 import numpy as np
 
+n_cv = 5
+n_offset = 0
+
 baseline_features_inner = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                            'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108']
 
@@ -12,7 +15,9 @@ baseline_features_extra = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010
                            'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f150']
 
 additional_features = [
-   'f106','f107','f108','f109','f151','f152','f153','f141','f142','f143','f144'
+    'f060','f061','f062',
+    'f030','f052','f053',
+    'f109','f151','f152','f153','f141','f142','f143','f144'
 ]
 
 additional_features_ = [
@@ -44,7 +49,7 @@ def beats(old_score, old_scores, new_score, new_scores):
         if new_scores[i] < old_scores[i]:
             n_beats += 1
 
-    if n_beats > len(old_scores)/2:
+    if n_beats > len(old_scores)/2 + n_offset:
         return True
     return False
 
@@ -61,8 +66,8 @@ def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
         'basepath': './',
         'features_inner': baseline_features_inner,
         'features_extra': baseline_features_extra,
-        'model_inner': LGBMModel(weight_mode='weighted'),
-        'model_extra': LGBMModel(weight_mode='weighted'),
+        'model_inner': LGBMModel(weight_mode='weighted', nfolds=n_cv),
+        'model_extra': LGBMModel(weight_mode='weighted', nfolds=n_cv),
         'submit_path': None,
         'log_name': log,
         'drop_feat_inner': drop_feat_inner,
@@ -95,6 +100,7 @@ def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
             exp_scores = exp.scores(fs_on)
 
             if beats(best_score, best_scores, exp_score, exp_scores):
+                print('!!! best score !!! {} -> {}'.format(best_score, exp_score))
                 best_score = exp_score
                 best_scores = exp_scores
                 best_feat = additional

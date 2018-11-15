@@ -5,6 +5,8 @@ from model.model import Model
 import logging
 import time
 from model.postproc import *
+from .confusion_matrix import save_confusion_matrix
+
 
 class Experiment:
     def __init__(self, basepath: str,
@@ -82,6 +84,9 @@ class Experiment:
         self.logger.info('training time: {}'.format(time.time() - s))
         self.score = self.model.score()
         self.scores = self.model.scores()
+
+        oof, y = self.model.get_oof_prediction()
+        save_confusion_matrix(oof, y, 'matrix.png')
 
     def post_proc(self, pred):
 

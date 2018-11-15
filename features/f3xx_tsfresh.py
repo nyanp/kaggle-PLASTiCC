@@ -109,3 +109,12 @@ def f370_fft_aggregated(input: Input, debug=True, target_dir='.'):
     ext = extract_features(input.lc[['id_passband','flux']], n_jobs=0, column_id='id_passband',
                            default_fc_parameters={"fft_aggregated": [{"aggtype": s} for s in ["centroid", "variance", "skew", "kurtosis"]]})
     return postproc(ext)
+
+@feature('f361')
+def f361_fft_coefficient(input: Input, debug=True, target_dir='.'):
+    fcp = {'fft_coefficient': [{'coeff': 0, 'attr': 'abs'}, {'coeff': 1, 'attr': 'abs'}], 'kurtosis': None,
+           'skewness': None}
+    agg_df_ts = tsfresh.extract_features(input.lc, column_id='object_id', column_sort='mjd', column_kind='passband',
+                                         column_value='flux', default_fc_parameters=fcp, n_jobs=0)
+    agg_df_ts.index.rename('object_id', inplace=True)
+    return agg_df_ts

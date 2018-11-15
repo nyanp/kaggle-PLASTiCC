@@ -7,6 +7,11 @@ import time
 import gc
 from model.postproc import *
 from model.lgbm import multi_weighted_logloss
+from .confusion_matrix import save_confusion_matrix
+from model.problem import classes
+import sys
+import os
+
 
 class ExperimentDualModel:
     def __init__(self, basepath: str,
@@ -19,9 +24,17 @@ class ExperimentDualModel:
                  drop_feat_inner = None,
                  drop_feat_extra = None,
                  logging_level = logging.DEBUG,
-                 postproc_version = 1):
+                 postproc_version = 1,
+                 mode='both'):
+
+        try:
+            os.mkdir(basepath+log_name)
+        except:
+            pass
 
         df = pd.read_feather(basepath + 'input/meta.f')
+        self.mode = mode
+        self.logdir = basepath+log_name+"/"
 
         if submit_path is None:
             self.submit_path = None
@@ -37,21 +50,27 @@ class ExperimentDualModel:
         self.model_extra = model_extra
         self.logger = logging.getLogger(log_name)
         self.logger.setLevel(logging_level)
-        self.fh = logging.FileHandler(basepath+log_name+'.log')
+        self.fh = logging.FileHandler(self.logdir+'log.txt')
         self.fh.setLevel(logging_level)
-        self.logger.addHandler(self.fh)
+        if len(self.logger.handlers) == 0:
+            self.logger.addHandler(self.fh)
 
         self.logger.info('load features...')
-        self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner)
-        gc.collect()
-        self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra)
-        gc.collect()
+        if self._use_inner:
+            self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner)
+            gc.collect()
+        if self._use_extra:
+            self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra)
+            gc.collect()
 
         self.postproc_version = postproc_version
 
     def _setup(self, df, features, basepath, drop) -> pd.DataFrame:
         for f in tqdm(features):
-            tmp = pd.read_feather(basepath + 'features/' + str(f) + '.f')
+            if self.submit_path is None:
+                tmp = pd.read_feather(basepath + 'features_tr/' + str(f) + '.f')
+            else:
+                tmp = pd.read_feather(basepath + 'features/' + str(f) + '.f')
 
             df = pd.merge(df, tmp, on='object_id', how='left')
         if drop is not None:
@@ -80,17 +99,47 @@ class ExperimentDualModel:
         fi.sort_values(by='importance', ascending=False, inplace=True)
         fi = fi.reset_index(drop=True)
         self.logger.debug('importance:')
-        for i in range(10):
+        for i in range(30):
             self.logger.debug('{} : {}'.format(fi.loc[i, 'feature'], fi.loc[i, 'importance']))
 
         oof, y = model.get_oof_prediction()
         return pred, oof, y
 
+    @property
+    def _use_inner(self):
+        return self.mode == 'inner-only' or self.mode == 'both'
+
+    @property
+    def _use_extra(self):
+        return self.mode == 'extra-only' or self.mode == 'both'
+
+    def _make_df(self, oof, model, df):
+        classes = ['class_' + str(c) for c in model.clfs[0].classes_]
+        d = pd.DataFrame(oof, columns=classes)
+        d['object_id'] = df['object_id']
+        d['target'] = df['target']
+        return d[['object_id', 'target'] + classes]
+
+    def _merge_oof(self, oof_inner, oof_outer):
+        inner = self._make_df(oof_inner, self.model_inner, self.df_inner)
+        outer = self._make_df(oof_outer, self.model_extra, self.df_extra)
+        df = pd.concat([inner, outer]).sort_values(by='object_id').fillna(0).reset_index(drop=True)
+        df.set_index('object_id', inplace=True)
+        df['target'] = df['target'].astype(np.int32)
+        return df[['target']+['class_'+str(i) for i in classes]]
+
     def execute(self):
-        print('exec-inner')
-        pred_inner, oof_inner, y_inner = self._exec('inner', self.df_inner, self.model_inner)
-        print('exec-outer')
-        pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra)
+        if self._use_inner:
+            print('exec-inner')
+            pred_inner, oof_inner, y_inner = self._exec('inner', self.df_inner, self.model_inner)
+
+        if self._use_extra:
+            print('exec-outer')
+            pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra)
+
+        if self._use_extra and self._use_inner:
+            self.oof = self._merge_oof(oof_inner, oof_outer)
+            save_confusion_matrix(self.oof.drop('target', axis=1).values, self.oof['target'], self.logdir+'oof_dual.png')
 
         if self.submit_path is not None:
             pred_all = pd.concat([pred_inner, pred_extra]).fillna(0)
@@ -102,5 +151,17 @@ class ExperimentDualModel:
                 raise NotImplementedError()
             submit(pred_all, self.submit_path)
 
+
+    def score(self, type='extra'):
+        if type == 'inner':
+            return self.model_inner.score()
+        else:
+            return self.model_extra.score()
+
+    def scores(self, type='extra'):
+        if type == 'inner':
+            return self.model_inner.scores()
+        else:
+            return self.model_extra.scores()
 
 
