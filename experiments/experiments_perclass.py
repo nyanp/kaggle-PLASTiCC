@@ -58,7 +58,7 @@ class ExperimentDualModel:
             df.drop(drop, axis=1, inplace=True)
         return df
 
-    def _exec(self, name, df, model):
+    def _exec(self, name, df, model, df_pseudo=None):
         self.logger.info(name)
         self.logger.info('features: {}'.format(df.columns.tolist()))
         self.logger.info('model: {}'.format(model.name()))

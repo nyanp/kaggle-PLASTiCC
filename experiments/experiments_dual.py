@@ -25,7 +25,8 @@ class ExperimentDualModel:
                  drop_feat_extra = None,
                  logging_level = logging.DEBUG,
                  postproc_version = 1,
-                 mode='both'):
+                 mode='both',
+                 pseudo_meta_path=None):
 
         try:
             os.mkdir(basepath+log_name)
@@ -33,6 +34,13 @@ class ExperimentDualModel:
             pass
 
         df = pd.read_feather(basepath + 'input/meta.f')
+
+        if pseudo_meta_path is not None:
+            print('using pseudo label')
+            pseudo_df = pd.read_feather(basepath + pseudo_meta_path)
+        else:
+            pseudo_df = None
+
         self.mode = mode
         self.logdir = basepath+log_name+"/"
 
@@ -46,6 +54,15 @@ class ExperimentDualModel:
 
         self.df_inner = df[df.extra == 0].reset_index(drop=True)
         self.df_extra = df[df.extra == 1].reset_index(drop=True)
+
+        if pseudo_df is not None:
+            pseudo_df['extra'] = (pseudo_df['hostgal_photoz'] > 0.0).astype(np.int32)
+            self.pseudo_df_inner = pseudo_df[pseudo_df.extra == 0].reset_index(drop=True)
+            self.pseudo_df_extra = pseudo_df[pseudo_df.extra == 1].reset_index(drop=True)
+        else:
+            self.pseudo_df_inner = None
+            self.pseudo_df_extra = None
+
         self.model_inner = model_inner
         self.model_extra = model_extra
         self.logger = logging.getLogger(log_name)
@@ -58,9 +75,13 @@ class ExperimentDualModel:
         self.logger.info('load features...')
         if self._use_inner:
             self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner)
+            if self.pseudo_df_inner is not None:
+                self.pseudo_df_inner = self._setup(self.pseudo_df_inner, features_inner, basepath, drop_feat_inner)
             gc.collect()
         if self._use_extra:
             self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra)
+            if self.pseudo_df_extra is not None:
+                self.pseudo_df_extra = self._setup(self.pseudo_df_extra, features_extra, basepath, drop_feat_extra)
             gc.collect()
 
         self.postproc_version = postproc_version
@@ -77,7 +98,7 @@ class ExperimentDualModel:
             df.drop(drop, axis=1, inplace=True)
         return df
 
-    def _exec(self, name, df, model):
+    def _exec(self, name, df, model, pseudo_df=None):
         self.logger.info(name)
         self.logger.info('features: {}'.format(df.columns.tolist()))
         self.logger.info('model: {}'.format(model.name()))
@@ -89,7 +110,7 @@ class ExperimentDualModel:
             model.fit(x_train, y_train, self.logger)
             pred = None
         else:
-            pred = model.fit_predict(df, self.logger)
+            pred = model.fit_predict(df, self.logger, pseudo_df=pseudo_df)
 
         self.logger.info('training time: {}'.format(time.time() - s))
 
@@ -131,11 +152,11 @@ class ExperimentDualModel:
     def execute(self):
         if self._use_inner:
             print('exec-inner')
-            pred_inner, oof_inner, y_inner = self._exec('inner', self.df_inner, self.model_inner)
+            pred_inner, oof_inner, y_inner = self._exec('inner', self.df_inner, self.model_inner, self.pseudo_df_inner)
 
         if self._use_extra:
             print('exec-outer')
-            pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra)
+            pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, self.pseudo_df_extra)
 
         if self._use_extra and self._use_inner:
             self.oof = self._merge_oof(oof_inner, oof_outer)
