@@ -168,15 +168,18 @@ class ExperimentDualModel:
         if self._use_extra:
             print('exec-outer')
             if self.pseudo_n_loop > 0:
+                pred_extra = None
                 for i in range(self.pseudo_n_loop):
+                    if i > 0:
+                        self._update_pseudo_label(pred_extra)
                     pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, self.df_extra_pseudo)
-                    self._update_pseudo_label(pred_extra)
             else:
                 pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, None)
 
         if self._use_extra and self._use_inner:
             self.oof = self._merge_oof(oof_inner, oof_outer, self.df_inner, self.df_extra_pseudo)
             save_confusion_matrix(self.oof.drop('target', axis=1).values, self.oof['target'], self.logdir+'oof_dual.png')
+            self.oof.reset_index().to_feather(self.logdir+'oof.f')
 
         if self.submit_path is not None:
             pred_all = pd.concat([pred_inner, pred_extra]).fillna(0)
