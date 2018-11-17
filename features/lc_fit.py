@@ -80,11 +80,11 @@ if __name__ == "__main__":
 
     for i in tqdm(range(n_loop)):
         object_id = meta.index[i]
-        try:
-            ret.loc[object_id] = fitting(model, meta, lc, object_id)
-        except:
-            n_errors += 1
-            pass
+        #try:
+        ret.loc[object_id] = fitting(model, meta, lc, object_id)
+        #except:
+        #    n_errors += 1
+        #    pass
 
     print('total {} data processed. {} data was skipped'.format(len(meta), n_errors))
 
