@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from tqdm import tqdm
 
 training_only = False
+debug =False
 
 @contextmanager
 def timer(name):
@@ -49,7 +50,12 @@ if __name__ == "__main__":
         if training_only:
             lc = lc[lc.object_id.isin(meta.index)].reset_index(drop=True)
 
-    print('shape: {}'.format(lc.shape))
+    print('shape(lc): {}'.format(lc.shape))
+    print('shape(meta): {}'.format(meta.shape))
+
+    with timer('dropping meta'):
+        meta = meta[meta.object_id.isin(lc.object_id)].reset_index(drop=True)
+        print('shape(meta): {}'.format(meta.shape))
 
     passbands = ['lsstu','lsstg','lsstr','lssti','lsstz','lssty']
 
@@ -67,7 +73,11 @@ if __name__ == "__main__":
 
     n_errors = 0
 
-    for i in tqdm(range(len(meta))):
+    n_loop = len(meta)
+    if debug:
+        n_loop = 100
+
+    for i in tqdm(range(n_loop)):
         object_id = meta.index[i]
         try:
             ret.loc[object_id] = fitting(model, meta, lc, object_id)

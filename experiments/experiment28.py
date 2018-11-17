@@ -14,7 +14,7 @@ class Experiment28(ExperimentDualModel):
                          submit_path=submit_path,
                          log_name='experiment28',
                          drop_feat_inner=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'distmod', 'hostgal_photoz'],
-                         drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b'],
+                         drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'c_err', 't0_err', 'x0_err', 'x1_err', 'c_err', 'ncall', 'z_err'],
                          postproc_version=2,
                          pseudo_classes=[90, 42],
                          pseudo_n_loop=3,
