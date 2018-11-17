@@ -44,7 +44,6 @@ if __name__ == "__main__":
         if training_only:
             meta = meta[~meta.target.isnull()]
         meta = meta[meta.hostgal_photoz > 0].reset_index(drop=True)
-        meta.set_index('object_id', inplace=True)
 
         lc = pd.read_feather('../input/all_{}.f'.format(data_index))
         if training_only:
@@ -56,6 +55,8 @@ if __name__ == "__main__":
     with timer('dropping meta'):
         meta = meta[meta.object_id.isin(lc.object_id)].reset_index(drop=True)
         print('shape(meta): {}'.format(meta.shape))
+
+    meta.set_index('object_id', inplace=True)
 
     passbands = ['lsstu','lsstg','lsstr','lssti','lsstz','lssty']
 
