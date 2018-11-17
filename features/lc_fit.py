@@ -76,3 +76,7 @@ if __name__ == "__main__":
             pass
 
     print('total {} data processed. {} data was skipped'.format(len(meta), n_errors))
+
+    ret.reset_index(inplace=True)
+    ret.rename(columns={'index': 'object_id'}, inplace=True)
+    ret.to_feather('../features/f500_{}.f'.format(data_index))
