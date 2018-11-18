@@ -86,8 +86,8 @@ if __name__ == "__main__":
             n_errors += 1
             pass
 
-        if i == 1000 and n_errors == 1000:
-            raise RuntimeError('All 1000 first attempts were failed. stopped')
+        if i == 30 and n_errors == 30:
+            raise RuntimeError('All 30 first attempts were failed. stopped')
 
     print('total {} data processed. {} data was skipped'.format(len(meta), n_errors))
 
