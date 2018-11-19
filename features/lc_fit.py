@@ -94,7 +94,7 @@ if __name__ == "__main__":
             ret.loc[object_id] = fitting(model, meta, lc, object_id)
 
             if i % checkpoint == 0 and len(ret) > 0:
-                ret.reset_index(drop=True).to_feather('../features/f500_{}_checkpoint{}.f'.format(data_index, i))
+                ret.reset_index(drop=True).to_feather('../features/f500_{}_checkpoint{}_{}.f'.format(data_index, skip, i))
         except:
             n_errors += 1
             pass
