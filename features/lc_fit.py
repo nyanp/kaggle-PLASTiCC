@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 training_only = False
 debug =False
+checkpoint = 500
 
 @contextmanager
 def timer(name):
@@ -82,6 +83,9 @@ if __name__ == "__main__":
         object_id = meta.index[i]
         try:
             ret.loc[object_id] = fitting(model, meta, lc, object_id)
+
+            if i % checkpoint == 0 and len(ret) > 0:
+                ret.reset_index(drop=True).to_feather('../features/f500_{}_checkpoint{}.f'.format(data_index, i))
         except:
             n_errors += 1
             pass
