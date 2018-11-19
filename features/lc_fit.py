@@ -11,6 +11,7 @@ training_only = False
 debug =False
 checkpoint = 500
 skip = 0
+end = -1
 
 @contextmanager
 def timer(name):
@@ -42,9 +43,12 @@ if __name__ == "__main__":
 
     if len(sys.argv) >= 3:
         skip = int(sys.argv[2])
+    if len(sys.argv) >= 4:
+        end = int(sys.argv[3])
 
     print('index: {}'.format(data_index))
     print('skip: {}'.format(skip))
+    print('end: {}'.format(end))
 
     with timer('load data'):
         meta = pd.read_feather('../input/meta.f')
@@ -85,16 +89,15 @@ if __name__ == "__main__":
     if debug:
         n_loop = 100
 
-    for i in tqdm(range(n_loop)):
-        if skip > i:
-            continue
+    if end > 0:
+        n_loop = end
 
+    for i in tqdm(range(skip, n_loop)):
         object_id = meta.index[i]
         try:
             ret.loc[object_id] = fitting(model, meta, lc, object_id)
-
-            if i % checkpoint == 0 and len(ret) > 0:
-                ret.reset_index(drop=True).to_feather('../features/f500_{}_checkpoint{}_{}.f'.format(data_index, skip, i))
+            #if i % checkpoint == 0 and len(ret) > 0:
+            #    ret.reset_index(drop=True).to_feather('../features/f500_{}_checkpoint{}_{}.f'.format(data_index, skip, i))
         except:
             n_errors += 1
             pass
@@ -106,4 +109,4 @@ if __name__ == "__main__":
 
     ret.reset_index(inplace=True)
     ret.rename(columns={'index': 'object_id'}, inplace=True)
-    ret.to_feather('../features/f500_{}.f'.format(data_index))
+    ret.to_feather('../features/f500_{}_{}_{}.f'.format(data_index, skip, end))
