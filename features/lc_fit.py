@@ -10,6 +10,7 @@ from tqdm import tqdm
 training_only = False
 debug =False
 checkpoint = 500
+skip = 0
 
 @contextmanager
 def timer(name):
@@ -34,12 +35,17 @@ def fitting(model, meta, data, object_id):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         raise RuntimeError('Specify Data Index')
 
     data_index = int(sys.argv[1])
 
+    if len(sys.argv) >= 3:
+        skip = int(sys.argv[2])
+
     print('index: {}'.format(data_index))
+    print('skip: {}'.format(skip))
+
     with timer('load data'):
         meta = pd.read_feather('../input/meta.f')
         if training_only:
@@ -80,6 +86,9 @@ if __name__ == "__main__":
         n_loop = 100
 
     for i in tqdm(range(n_loop)):
+        if skip > i:
+            continue
+
         object_id = meta.index[i]
         try:
             ret.loc[object_id] = fitting(model, meta, lc, object_id)
