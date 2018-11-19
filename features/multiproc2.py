@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     for i in range(start, end, chunksize):
         chunk_start = i
-        chunk_end = i + chunksize
+        chunk_end = min(end, i + chunksize)
 
         try:
             subprocess.call(["python", "lc_fit.py", str(meta), str(chunk_start), str(chunk_end)])
