@@ -6,12 +6,18 @@ import time
 from astropy.table import Table
 from contextlib import contextmanager
 from tqdm import tqdm
+from astropy import wcs, units as u
+from sncosmo.bandpasses import read_bandpass
 
 training_only = False
 debug =False
 checkpoint = 500
 skip = 0
 end = -1
+
+for band in ['g','i','r','u','y','z']:
+    b = read_bandpass('../lsst/total_{}.dat'.format(band), wave_unit=u.nm, trim_level=0.001, name='lsst{}_n'.format(band), normalize=True)
+    sncosmo.register(b, 'lsst{}_n'.format(band))
 
 @contextmanager
 def timer(name):
@@ -69,7 +75,8 @@ if __name__ == "__main__":
 
     meta.set_index('object_id', inplace=True)
 
-    passbands = ['lsstu','lsstg','lsstr','lssti','lsstz','lssty']
+    #passbands = ['lsstu','lsstg','lsstr','lssti','lsstz','lssty']
+    passbands = ['lsstu_n', 'lsstg_n', 'lsstr_n', 'lssti_n', 'lsstz_n', 'lssty_n']
 
     with timer('prep'):
         s = time.time()
@@ -109,4 +116,4 @@ if __name__ == "__main__":
 
     ret.reset_index(inplace=True)
     ret.rename(columns={'index': 'object_id'}, inplace=True)
-    ret.to_feather('../features/f500_{}_{}_{}.f'.format(data_index, skip, end))
+    ret.to_feather('../features/f501_{}_{}_{}.f'.format(data_index, skip, end))

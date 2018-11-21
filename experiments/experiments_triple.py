@@ -13,20 +13,24 @@ import sys
 import os
 
 
-class ExperimentDualModel:
+# inner / extra(w/o specz) / extra(w/ specz)
+class ExperimentTripleModel:
     def __init__(self, basepath: str,
                  features_inner: List[str],
                  features_extra: List[str],
+                 features_extra2: List[str],
                  model_inner: Model,
                  model_extra: Model,
+                 model_extra2: Model,
                  submit_path: str = 'output/submission.csv',
                  log_name: str = 'default',
                  drop_feat_inner = None,
                  drop_feat_extra = None,
+                 drop_feat_extra2 = None,
                  logging_level = logging.DEBUG,
                  postproc_version = 1,
                  mode='both',
-                 pseudo_n_loop=0,
+                 pseudo_n_loop=3,
                  pseudo_th=0.97,
                  pseudo_classes=[90]):
 
@@ -50,9 +54,13 @@ class ExperimentDualModel:
 
         self.df_inner = df[df.extra == 0].reset_index(drop=True)
         self.df_extra = df[df.extra == 1].reset_index(drop=True)
+        self.df_extra2 = df[df.extra == 1].reset_index(drop=True)
+        self.df_extra2 = df[~df.hostgal_specz.isnull()].reset_index(drop=True)
 
         self.model_inner = model_inner
         self.model_extra = model_extra
+        self.model_extra2 = model_extra2
+
         self.logger = logging.getLogger(log_name)
         self.logger.setLevel(logging_level)
         self.fh = logging.FileHandler(self.logdir+'log.txt')
@@ -68,6 +76,7 @@ class ExperimentDualModel:
             self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra)
             gc.collect()
             self.df_extra_pseudo = self.df_extra.copy()
+            self.df_extra2 = self._setup(self.df_extra2, features_extra2, basepath, drop_feat_extra2)
 
         self.postproc_version = postproc_version
         self.pseudo_n_loop = pseudo_n_loop
@@ -103,7 +112,6 @@ class ExperimentDualModel:
         self.logger.info('training time: {}'.format(time.time() - s))
 
         importance = model.feature_importances()
-        importance.reset_index(drop=True).to_feather(self.logdir+'importance_{}.f'.format(name))
 
         fi = importance.groupby('feature')['importance'].mean().reset_index()
         fi.sort_values(by='importance', ascending=False, inplace=True)
@@ -130,10 +138,15 @@ class ExperimentDualModel:
         d['target'] = df['target']
         return d[['object_id', 'target'] + classes]
 
-    def _merge_oof(self, oof_inner, oof_outer, df_inner, df_extra):
+    def _merge_oof(self, oof_inner, oof_outer, oof_outer2, df_inner, df_extra, df_extra2):
         inner = self._make_df(oof_inner, self.model_inner, df_inner)
         outer = self._make_df(oof_outer, self.model_extra, df_extra)
-        df = pd.concat([inner, outer]).sort_values(by='object_id').fillna(0).reset_index(drop=True)
+        outer2 = self._make_df(oof_outer2, self.model_extra2, df_extra2)
+
+        # speczがある場合はそちらを信じる。
+        outer = outer[~outer.object_id.isin(outer2.object_id)].reset_index(drop=True)
+
+        df = pd.concat([inner, outer, outer2]).sort_values(by='object_id').fillna(0).reset_index(drop=True)
         df.set_index('object_id', inplace=True)
         df['target'] = df['target'].astype(np.int32)
         return df[['target']+['class_'+str(i) for i in classes]]
@@ -168,6 +181,9 @@ class ExperimentDualModel:
 
         if self._use_extra:
             print('exec-outer')
+
+            pred_extra2, oof_outer2, y_outer2 = self._exec('extra2', self.df_extra2, self.model_extra2, None)
+
             if self.pseudo_n_loop > 0:
                 pred_extra = None
                 for i in range(self.pseudo_n_loop):
@@ -178,7 +194,7 @@ class ExperimentDualModel:
                 pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, None)
 
         if self._use_extra and self._use_inner:
-            self.oof = self._merge_oof(oof_inner, oof_outer, self.df_inner, self.df_extra_pseudo)
+            self.oof = self._merge_oof(oof_inner, oof_outer, oof_outer2, self.df_inner, self.df_extra_pseudo, self.df_extra)
             save_confusion_matrix(self.oof.drop('target', axis=1).values, self.oof['target'], self.logdir+'oof_dual.png')
             self.oof.reset_index().to_feather(self.logdir+'oof.f')
 
@@ -196,13 +212,18 @@ class ExperimentDualModel:
     def score(self, type='extra'):
         if type == 'inner':
             return self.model_inner.score()
-        else:
+        elif type == 'extra':
             return self.model_extra.score()
+        else:
+            return self.model_extra2.score()
 
     def scores(self, type='extra'):
         if type == 'inner':
             return self.model_inner.scores()
-        else:
+        elif type == 'extra':
             return self.model_extra.scores()
+        else:
+            return self.model_extra2.scores()
+
 
 

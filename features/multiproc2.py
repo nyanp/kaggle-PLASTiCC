@@ -4,9 +4,12 @@ import pandas as pd
 import subprocess
 
 if __name__ == "__main__":
-    meta = sys.argv[1]
+    meta = int(sys.argv[1])
 
-    n = len(pd.read_feather('../input/all_{}.f'.format(meta)))
+    #n = len(pd.read_feather('../input/all_{}.f'.format(meta)))
+    meta_ = pd.read_feather('../input/meta.f')
+    meta_ = meta_[meta_.hostgal_photoz > 0].reset_index(drop=True)
+    n = len(meta_[meta_.object_id % 30 == meta])
 
     chunksize = 300
     print('total {} rows.'.format(n))
