@@ -15,6 +15,14 @@ checkpoint = 500
 skip = 0
 end = -1
 
+use_estimated_z = False
+fixed_z = True
+source = 'salt2-extended'
+snr = 3
+debug = False
+feature = 'f505'
+normalize = True
+
 for band in ['g','i','r','u','y','z']:
     b = read_bandpass('../lsst/total_{}.dat'.format(band), wave_unit=u.nm, trim_level=0.001, name='lsst{}_n'.format(band), normalize=True)
     sncosmo.register(b, 'lsst{}_n'.format(band))
@@ -28,15 +36,25 @@ def timer(name):
 
 
 def fitting(model, meta, data, object_id):
-    z = meta.loc[object_id, 'hostgal_photoz']
-    zerr = meta.loc[object_id, 'hostgal_photoz_err']
     table = Table.from_pandas(data[data.object_id == object_id])
+
+    if use_estimated_z:
+        z = meta.loc[object_id, 'hostgal_z_predicted']
+        zerr = meta.loc[object_id, 'hostgal_photoz_err']
+        photoz = meta.loc[object_id, 'hostgal_photoz']
+        zerr = max(zerr, abs(z - photoz))
+    elif fixed_z:
+        z = 0.7
+        zerr = 0.7
+    else:
+        z = meta.loc[object_id, 'hostgal_photoz']
+        zerr = meta.loc[object_id, 'hostgal_photoz_err']
 
     # run the fit
     result, fitted_model = sncosmo.fit_lc(
         table, model,
         ['z', 't0', 'x0', 'x1', 'c'],  # parameters of model to vary
-        bounds={'z': (z - zerr, z + zerr)})  # bounds on parameters (if any)
+        bounds={'z': (z - zerr, z + zerr)}, minsnr=snr)  # bounds on parameters (if any)
 
     return [result.chisq] + [result.ncall] + list(result.parameters) + list(result.errors.values())
 
@@ -75,8 +93,10 @@ if __name__ == "__main__":
 
     meta.set_index('object_id', inplace=True)
 
-    #passbands = ['lsstu','lsstg','lsstr','lssti','lsstz','lssty']
-    passbands = ['lsstu_n', 'lsstg_n', 'lsstr_n', 'lssti_n', 'lsstz_n', 'lssty_n']
+    if normalize:
+        passbands = ['lsstu_n', 'lsstg_n', 'lsstr_n', 'lssti_n', 'lsstz_n', 'lssty_n']
+    else:
+        passbands = ['lsstu','lsstg','lsstr','lssti','lsstz','lssty']
 
     with timer('prep'):
         s = time.time()
@@ -87,8 +107,23 @@ if __name__ == "__main__":
     ret = pd.DataFrame(
         columns=['chisq', 'ncall', 'z', 't0', 'x0', 'x1', 'c', 'z_err', 't0_err', 'x0_err', 'x1_err', 'c_err'])
 
+    prefix = source
+    if fixed_z:
+        prefix += '_f_'
+    elif use_estimated_z:
+        prefix += '_e_'
+    else:
+        prefix += '_p_'
+
+    prefix += 'sn{}_'.format(snr)
+
+    if normalize:
+        prefix += 'n_'
+
+    ret.columns = [prefix + c for c in ret.columns]
+
     # create a model
-    model = Model(source='salt2')
+    model = Model(source=source)
 
     n_errors = 0
 
@@ -116,4 +151,4 @@ if __name__ == "__main__":
 
     ret.reset_index(inplace=True)
     ret.rename(columns={'index': 'object_id'}, inplace=True)
-    ret.to_feather('../features/f501_{}_{}_{}.f'.format(data_index, skip, end))
+    ret.to_feather('../features/{}_{}_{}_{}.f'.format(feature, data_index, skip, end))

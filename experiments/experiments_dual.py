@@ -83,7 +83,9 @@ class ExperimentDualModel:
 
             df = pd.merge(df, tmp, on='object_id', how='left')
         if drop is not None:
-            df.drop(drop, axis=1, inplace=True)
+            drop_ = [d for d in drop if d in df]
+            print('dropped: {}'.format(drop_))
+            df.drop(drop_, axis=1, inplace=True)
         return df
 
     def _exec(self, name, df, model, pseudo_df=None):
