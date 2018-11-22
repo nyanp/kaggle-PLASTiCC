@@ -8,6 +8,8 @@ from contextlib import contextmanager
 from tqdm import tqdm
 from astropy import wcs, units as u
 from sncosmo.bandpasses import read_bandpass
+from astropy import wcs, units as u
+from sncosmo.bandpasses import read_bandpass
 
 training_only = False
 debug =False
