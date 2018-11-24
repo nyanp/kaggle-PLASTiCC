@@ -1,0 +1,5 @@
+This folder will hold yuval's example files
+
+Prepare - for mamas.ipynb   - Notebook for data preparation 
+generators.py   - python file, holds helper functions, imported by the notebooks should be in 'functions' subfolder
+Time Series CNN -on the fly augmentation-Clean.ipynb  - Notebook train and run NN without mamas features (can be changed to add mamas's features)
