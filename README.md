@@ -1,11 +1,17 @@
 # kaggle-PLASTiCC
 
 ## install
-sudo apt install gcc g++
+- use following commands on GCP (ubuntu 16.04)
 
-requires python 3.5 or 3.6
-
-iminuit
-sncosmo
-astropy
-lightgbm
+```bash
+sudo apt install gcc g++ git tmux
+wget https://repo.anaconda.com/archive/Anaconda3-5.3.1-Linux-x86_64.sh
+sh Anaconda3-5.3.1-Linux-x86_64.sh
+conda create -n plasticc python=3.6
+pip install numpy pandas feather-format lightgbm sncosmo astropy iminuit tqdm
+pip install pyarrow==0.9.0
+git clone https://github.com/nyanp/kaggle-PLASTiCC
+cd kaggle-PLASTiCC
+mkdir input
+gsutil -m cp -r gs://your-directory-for-input-files/ input/
+```

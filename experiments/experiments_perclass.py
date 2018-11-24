@@ -51,7 +51,7 @@ class ExperimentDualModel:
 
     def _setup(self, df, features, basepath, drop) -> pd.DataFrame:
         for f in tqdm(features):
-            tmp = pd.read_feather(basepath + 'features/' + str(f) + '.f')
+            tmp = pd.read_feather(basepath + 'features_all/' + str(f) + '.f')
 
             df = pd.merge(df, tmp, on='object_id', how='left')
         if drop is not None:

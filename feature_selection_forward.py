@@ -12,24 +12,21 @@ baseline_features_inner = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010
                            'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108']
 
 baseline_features_extra = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-                           'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f150']
+                            'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
+                            'f144','f052','f053','f061','f063','f361','f600','f500','f1003','f506','f508']
 
 additional_features = [
-    'f060','f061','f062',
-    'f030','f052','f053',
-    'f109','f151','f152','f153','f141','f142','f143','f144'
+    'f1000','f1001','f1002','f1004','f1005','f1006',
+    'f060','f062','f212',
+    'f052','f053','f601','f601a','f701','f360','f311','f321', 'f109',
 ]
 
 additional_features_ = [
-    "f030", "f031",
-    "f032", "f130",
-    "f001", "f101",
-    "f102", "f204",
-    "f103", 'f040','f041',
-    'f105', 'f020', 'f021', 'f022', 'f023', 'f024', 'f025', 'f026', 'f027', 'f028', 'f029',
-    'f120', 'f121', 'f122', 'f123'
+    'f1000','f1001','f1002','f506','f508',
+    'f060','f061','f062','f210','f211','f212','f213',
+    'f030','f052','f053','f601','f601a','f701','f370','f360','f311','f321',
+    'f109','f151','f152','f153'
 ]
-
 eltwise_feature_tables = [
     "f303", "f307", "f311", "f350", "f310",
     "f340","f302", "f306", "f301", "f305", "f309", "f330", "f370",
@@ -75,6 +72,10 @@ def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
         'mode': mode
     }
 
+    summary = open(log+'/summary.csv', 'w')
+
+    summary.write('name,n_features,features,' + ','.join(['fold{}'.format(i) for i in range(n_cv)]) + ',total\n')
+
     for i in range(n_loop):
         baseline = ExperimentDualModel(**params)
         baseline.execute()
@@ -85,6 +86,10 @@ def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
         best_score = baseline_score
         best_scores = baseline_scores
         best_feat = None
+
+        summary.write('{}/{}th baseline,'.format(i, n_loop))
+        summary.write('{},"{}",{},{}\n'.format(len(baseline_features), baseline_features, baseline_scores, baseline_score))
+        summary.flush()
 
         for additional in additional_features:
             if fs_on == 'extra':
@@ -98,6 +103,11 @@ def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
 
             exp_score = exp.score(fs_on)
             exp_scores = exp.scores(fs_on)
+
+            summary.write('baseline+{},'.format(additional))
+            summary.write('{},"{}",{},{}\n'.format(len(baseline_features + [additional]), baseline_features + [additional], exp_scores,
+                                                   exp_score))
+            summary.flush()
 
             if beats(best_score, best_scores, exp_score, exp_scores):
                 print('!!! best score !!! {} -> {}'.format(best_score, exp_score))
@@ -180,6 +190,6 @@ def fs_per_column(n_loop:int = 100):
             features.drop(best_feat, axis=1, inplace=True)
 
 
-fs_per_file(10, 'log_fs_181115')
+fs_per_file(10, 'log_fs_181124')
 #fs_per_column(100)
 

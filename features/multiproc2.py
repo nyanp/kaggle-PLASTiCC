@@ -16,20 +16,23 @@ if __name__ == "__main__":
 
     start = 0
     end = n
+    script = 'lc_fit.py'
 
     if len(sys.argv) >= 4:
         start = int(sys.argv[2])
         end = int(sys.argv[3])
     if len(sys.argv) >= 5:
         chunksize = int(sys.argv[4])
+    if len(sys.argv) >= 6:
+        script = 'lc_fit_' + sys.argv[5] + '.py'
 
-    print('index: {}, {}-{}, chunk:{}'.format(meta, start, end, chunksize))
+    print('script: {}, index: {}, {}-{}, chunk:{}'.format(script, meta, start, end, chunksize))
 
     for i in range(start, end, chunksize):
         chunk_start = i
         chunk_end = min(end, i + chunksize)
 
         try:
-            subprocess.call(["python", "lc_fit.py", str(meta), str(chunk_start), str(chunk_end)])
+            subprocess.call(["python", script, str(meta), str(chunk_start), str(chunk_end)])
         except:
             print('###### catch exception: {}-{} ######'.format(chunk_start, chunk_end))

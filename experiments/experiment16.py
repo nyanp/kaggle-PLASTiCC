@@ -104,7 +104,7 @@ features = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f20
 
 from tqdm import tqdm
 for f in tqdm(features):
-    tmp = pd.read_feather('../features/' + str(f) + '.f')
+    tmp = pd.read_feather('../features_all/' + str(f) + '.f')
     df = pd.merge(df, tmp, on='object_id', how='left')
 
 full_features = df[~df.target.isnull()].reset_index(drop=True)

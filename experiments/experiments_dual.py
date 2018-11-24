@@ -79,7 +79,7 @@ class ExperimentDualModel:
             if self.submit_path is None:
                 tmp = pd.read_feather(basepath + 'features_tr/' + str(f) + '.f')
             else:
-                tmp = pd.read_feather(basepath + 'features/' + str(f) + '.f')
+                tmp = pd.read_feather(basepath + 'features_all/' + str(f) + '.f')
 
             df = pd.merge(df, tmp, on='object_id', how='left')
         if drop is not None:
