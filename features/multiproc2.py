@@ -18,9 +18,13 @@ if __name__ == "__main__":
     end = n
     script = 'lc_fit.py'
 
+    if len(sys.argv) == 3:
+        script = 'lc_fit_' + sys.argv[2] + '.py'
     if len(sys.argv) >= 4:
         start = int(sys.argv[2])
         end = int(sys.argv[3])
+        if end == -1 or end > n:
+            end = n
     if len(sys.argv) >= 5:
         chunksize = int(sys.argv[4])
     if len(sys.argv) >= 6:
