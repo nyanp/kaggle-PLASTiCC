@@ -28,7 +28,8 @@ class ExperimentDualModel:
                  mode='both',
                  pseudo_n_loop=0,
                  pseudo_th=0.97,
-                 pseudo_classes=[90]):
+                 pseudo_classes=[90],
+                 save_pseudo_label=False):
 
         try:
             os.mkdir(basepath+log_name)
@@ -73,6 +74,7 @@ class ExperimentDualModel:
         self.pseudo_n_loop = pseudo_n_loop
         self.pseudo_classes = pseudo_classes
         self.pseudo_th = pseudo_th
+        self.save_pseudo_label = save_pseudo_label
 
     def _setup(self, df, features, basepath, drop) -> pd.DataFrame:
         for f in tqdm(features):
@@ -140,7 +142,7 @@ class ExperimentDualModel:
         df['target'] = df['target'].astype(np.int32)
         return df[['target']+['class_'+str(i) for i in classes]]
 
-    def _update_pseudo_label(self, pred_extra: pd.DataFrame):
+    def _update_pseudo_label(self, pred_extra: pd.DataFrame, round: int):
         print('before update: {} training samples'.format(
             self.df_extra_pseudo[~self.df_extra_pseudo.target.isnull()].shape))
 
@@ -160,6 +162,10 @@ class ExperimentDualModel:
             pseudo.target = cls
             self.df_extra_pseudo = pd.concat([pseudo, non_pseudo]).reset_index(drop=True)
 
+            if self.save_pseudo_label:
+                tmp = pd.DataFrame({'object_id':pseudo.object_id})
+                tmp.reset_index(drop=True).to_feather(self.logdir+'pseudo_label_class{}_round{}.f'.format(cls, round))
+
         print('after update: {} training samples'.format(
             self.df_extra_pseudo[~self.df_extra_pseudo.target.isnull()].shape))
 
@@ -174,7 +180,7 @@ class ExperimentDualModel:
                 pred_extra = None
                 for i in range(self.pseudo_n_loop):
                     if i > 0:
-                        self._update_pseudo_label(pred_extra)
+                        self._update_pseudo_label(pred_extra, i)
                     pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, self.df_extra_pseudo)
             else:
                 pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, None)

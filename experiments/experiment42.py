@@ -26,9 +26,9 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
  'timescale_th0.5_min_ch3',
  'sn_salt2_ncall']
 
-# experiment40 - hostgal_photoz, sn_salt2_ncall
-class Experiment41(ExperimentDualModel):
-    def __init__(self, basepath, submit_path='output/experiment41.csv', save_pseudo_label=False):
+# experiment41 - distmod
+class Experiment42(ExperimentDualModel):
+    def __init__(self, basepath, submit_path='output/experiment42.csv'):
         super().__init__(basepath=basepath,
                          features_inner=['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143','f144'],
@@ -39,11 +39,10 @@ class Experiment41(ExperimentDualModel):
                          model_inner=LGBMModel(nfolds=10, weight_mode='weighted'),
                          model_extra=LGBMModel(nfolds=10, weight_mode='weighted'),
                          submit_path=submit_path,
-                         log_name='experiment41',
+                         log_name='experiment42',
                          drop_feat_inner=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'distmod', 'hostgal_photoz'] + blacklist,
-                         drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'hostgal_photoz'] + blacklist,
+                         drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'distmod', 'hostgal_photoz'] + blacklist,
                          postproc_version=2,
                          pseudo_classes=[90, 42],
                          pseudo_n_loop=3,
-                         pseudo_th=0.97,
-                         save_pseudo_label=save_pseudo_label)
+                         pseudo_th=0.97)
