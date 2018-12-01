@@ -83,7 +83,10 @@ class ExperimentDualModel:
             else:
                 tmp = pd.read_feather(basepath + 'features_all/' + str(f) + '.f')
 
+            tmp['object_id'] = tmp['object_id'].astype(np.int32)
+
             df = pd.merge(df, tmp, on='object_id', how='left')
+
         if drop is not None:
             drop_ = [d for d in drop if d in df]
             print('dropped: {}'.format(drop_))
@@ -113,7 +116,7 @@ class ExperimentDualModel:
         fi.sort_values(by='importance', ascending=False, inplace=True)
         fi = fi.reset_index(drop=True)
         self.logger.debug('importance:')
-        for i in range(30):
+        for i in range(min(len(fi),30)):
             self.logger.debug('{} : {}'.format(fi.loc[i, 'feature'], fi.loc[i, 'importance']))
 
         oof, y = model.get_oof_prediction()
@@ -142,6 +145,20 @@ class ExperimentDualModel:
         df['target'] = df['target'].astype(np.int32)
         return df[['target']+['class_'+str(i) for i in classes]]
 
+    def _merge_variance(self, df_inner, df_extra):
+        inner = pd.DataFrame(self.model_inner.variance,
+                             columns=['class_{}'.format(c) for c in self.model_inner.clfs[0].classes_],
+                             index=df_inner[df_inner.target.isnull()].object_id)
+
+        extra = pd.DataFrame(self.model_extra.variance,
+                             columns=['class_{}'.format(c) for c in self.model_extra.clfs[0].classes_],
+                             index=df_extra[df_extra.target.isnull()].object_id)
+        df = pd.concat([inner, extra]).sort_values(by='object_id').fillna(0).reset_index(drop=True)
+        print(df.head())
+        if 'object_id' in df:
+            df.set_index('object_id', inplace=True)
+        return df[['class_'+str(i) for i in classes]]
+
     def _update_pseudo_label(self, pred_extra: pd.DataFrame, round: int):
         print('before update: {} training samples'.format(
             self.df_extra_pseudo[~self.df_extra_pseudo.target.isnull()].shape))
@@ -169,6 +186,11 @@ class ExperimentDualModel:
         print('after update: {} training samples'.format(
             self.df_extra_pseudo[~self.df_extra_pseudo.target.isnull()].shape))
 
+    def _train_ids(self):
+        extra_idx = self.df_extra[~self.df_extra.target.isnull()].reset_index().object_id.tolist()
+        inner_idx = self.df_inner[~self.df_inner.target.isnull()].reset_index().object_id.tolist()
+        return extra_idx + inner_idx
+
     def execute(self):
         if self._use_inner:
             print('exec-inner')
@@ -176,7 +198,7 @@ class ExperimentDualModel:
 
         if self._use_extra:
             print('exec-outer')
-            if self.pseudo_n_loop > 0:
+            if self.pseudo_n_loop > 0 and self.submit_path:
                 pred_extra = None
                 for i in range(self.pseudo_n_loop):
                     if i > 0:
@@ -189,6 +211,27 @@ class ExperimentDualModel:
             self.oof = self._merge_oof(oof_inner, oof_outer, self.df_inner, self.df_extra_pseudo)
             save_confusion_matrix(self.oof.drop('target', axis=1).values, self.oof['target'], self.logdir+'oof_dual.png')
             self.oof.reset_index().to_feather(self.logdir+'oof.f')
+
+            object_ids = self._train_ids()
+            print('using data: {}'.format(len(object_ids)))
+            oof_ = self.oof.reset_index(drop=False)
+            self.oof_cv = oof_[oof_.object_id.isin(object_ids)].reset_index(drop=True)
+
+            print(self.oof.shape)
+            print(self.oof_cv.shape)
+
+            save_confusion_matrix(self.oof_cv.drop(['target', 'object_id'], axis=1).values, self.oof_cv['target'],
+                                  self.logdir + 'oof_dual_wo_pseudo.png')
+            self.oof_cv.to_feather(self.logdir + 'oof_wo_pseudo.f')
+
+            self.logger.debug('totalCV (with pseudo): {}'.format(multi_weighted_logloss(self.oof.target, self.oof.reset_index().drop(['object_id', 'target'], axis=1))))
+            self.logger.debug('totalCV (w/o pseudo):  {}'.format(multi_weighted_logloss(self.oof_cv.target, self.oof_cv.drop(['object_id', 'target'], axis=1))))
+
+            #try:
+            variance = self._merge_variance(self.df_inner, self.df_extra)
+            variance.reset_index().to_feather(self.logdir + 'variance_over_folds.f')
+            #except:
+            #    pass
 
         if self.submit_path is not None:
             pred_all = pd.concat([pred_inner, pred_extra]).fillna(0)

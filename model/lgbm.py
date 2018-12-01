@@ -137,12 +137,20 @@ class LGBMModel(Model):
         return 'LGBM'
 
     def predict(self, x) -> pd.DataFrame:
-        preds = np.zeros((len(x), self.n_classes))
+        preds = np.zeros((len(x), self.n_classes, self.nfolds))
 
-        for clf in self.clfs:
-            preds += clf.predict_proba(x, num_iteration=clf.best_iteration_) / len(self.clfs)
+        for i, clf in enumerate(self.clfs):
+            preds[:, :, i] = clf.predict_proba(x, num_iteration=clf.best_iteration_)
 
-        d = pd.DataFrame(preds, columns=['class_' + str(s) for s in self.clfs[0].classes_])
+        # variance over folds
+        self.variance = np.var(preds, axis=2)
+
+        mean_preds = np.mean(preds, axis=2)
+
+        #for clf in self.clfs:
+        #    preds += clf.predict_proba(x, num_iteration=clf.best_iteration_) / len(self.clfs)
+
+        d = pd.DataFrame(mean_preds, columns=['class_' + str(s) for s in self.clfs[0].classes_])
         d['object_id'] = x.index
         return d
 
