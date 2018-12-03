@@ -55,7 +55,7 @@ def fitting(model, meta, data, object_id):
     # run the fit
     result, fitted_model = sncosmo.fit_lc(
         table, model,
-        ['z', 't0', 'x0', 'x1', 'c'],  # parameters of model to vary
+        model.param_names,  # parameters of model to vary
         bounds={'z': (z - zerr, z + zerr)}, minsnr=snr)  # bounds on parameters (if any)
 
     return [result.chisq] + [result.ncall] + list(result.parameters) + list(result.errors.values())
@@ -106,8 +106,12 @@ if __name__ == "__main__":
         lc['zpsys'] = 'ab'
         lc['zp'] = 25.0
 
-    ret = pd.DataFrame(
-        columns=['chisq', 'ncall', 'z', 't0', 'x0', 'x1', 'c', 'z_err', 't0_err', 'x0_err', 'x1_err', 'c_err'])
+    # create a model
+    model = Model(source=source)
+
+    params = model.param_names
+    columns = ['chisq', 'ncall'] + [source + '_' + c for c in params] + [source + '_' + c + '_err' for c in params]
+    ret = pd.DataFrame(columns=columns)
 
     prefix = source
     if fixed_z:
@@ -123,9 +127,6 @@ if __name__ == "__main__":
         prefix += 'n_'
 
     ret.columns = [prefix + c for c in ret.columns]
-
-    # create a model
-    model = Model(source=source)
 
     n_errors = 0
 
@@ -146,7 +147,7 @@ if __name__ == "__main__":
             n_errors += 1
             pass
 
-        if i == 30 and n_errors == 30:
+        if i == 30 and n_errors == 31:
             raise RuntimeError('All 30 first attempts were failed. stopped')
 
     print('total {} data processed. {} data was skipped'.format(len(meta), n_errors))
