@@ -3,25 +3,28 @@ from experiments.experiments import Experiment
 from experiments.experiments_dual import ExperimentDualModel
 import pandas as pd
 import gc
+import os
 import numpy as np
 
 n_cv = 5
 n_offset = 0
 
-baseline_features_inner = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-                           'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108']
+baseline_features_inner = []
 
 baseline_features_extra = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-                            'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
-                            'f144','f052','f053','f061','f063','f361','f600','f500','f1003','f506','f508','f212']
+                                         'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
+                                         'f144',
+                                         'f052','f053','f061','f063','f361','f600','f500','f1003','f1080','f1086','f1087']
 
 additional_features = [
-    'f507','f1000','f1001','f1002','f1004','f1005','f1006',
-    'f060','f062',
-    'f052','f053','f601','f601a','f701','f311','f321', 'f109',
+    'f2001','f2002','f2003','f2004','f2005','f2006','f2007','f2008','f2009','f2010','f2011','f2012','f2013','f2014','f2015','f2016'
 ]
 
 additional_features_ = [
+    'f507', 'f1000', 'f1001', 'f1002', 'f1004', 'f1005', 'f1006',
+    'f060', 'f062',
+    'f052', 'f053', 'f601', 'f601a', 'f701', 'f311', 'f321', 'f109',
+
     'f1000','f1001','f1002','f506','f508',
     'f060','f061','f062','f210','f211','f212','f213',
     'f030','f052','f053','f601','f601a','f701','f370','f360','f311','f321',
@@ -52,6 +55,8 @@ def beats(old_score, old_scores, new_score, new_scores):
 
 
 def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
+    os.mkdir(log)
+
     if fs_on == 'extra':
         baseline_features = baseline_features_extra
         mode = 'extra-only'
@@ -190,6 +195,6 @@ def fs_per_column(n_loop:int = 100):
             features.drop(best_feat, axis=1, inplace=True)
 
 
-fs_per_file(10, 'log_fs_181124')
+fs_per_file(16, 'log_fs_181203_mamas', fs_on='extra')
 #fs_per_column(100)
 

@@ -6,7 +6,7 @@ from .loss import *
 import functools
 
 class LGBMModel(Model):
-    def __init__(self, param = None, random_state = 1, nfolds = 5, weight_mode='none'):
+    def __init__(self, param = None, random_state = 1, nfolds = 5, weight_mode='none', use_extra_classifier=False):
 
         if param is None:
             self.param =  {
@@ -35,6 +35,7 @@ class LGBMModel(Model):
         self.score_ = None
         self.nfolds = nfolds
         self.weight_mode = weight_mode
+        self.use_extra_classifier = use_extra_classifier
 
     def get_params(self):
         d = {
@@ -75,6 +76,8 @@ class LGBMModel(Model):
         else:
             assert self.weight_mode == 'none'
             w_train = None
+            
+        best_iterations = []
 
         for n_fold, (train_idx, valid_idx) in enumerate(folds.split(x, y)):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
@@ -94,6 +97,7 @@ class LGBMModel(Model):
                     eval_metric=lgb_multi_weighted_logloss, verbose=-1, early_stopping_rounds=100)
 
             oof_preds[valid_idx, :] = clf.predict_proba(valid_x, num_iteration=clf.best_iteration_)
+            best_iterations.append(clf.best_iteration_)
 
             #dtrain = lgb.Dataset(train_x, label_to_code(train_y))
             #dvalid = lgb.Dataset(valid_x, label_to_code(valid_y))
@@ -126,6 +130,22 @@ class LGBMModel(Model):
         full_auc = multi_weighted_logloss(y, oof_preds)
         logger.info('*** full auc: {}'.format(full_auc))
 
+        if self.use_extra_classifier:
+            if w_train is not None:
+                sample_weight = w_train
+            else:
+                sample_weight = None
+
+            n_iterations = int(1.1 * np.mean(best_iterations))
+
+            # LightGBM parameters found by Bayesian optimization
+            param = self.param.copy()
+            param['n_estimators'] = n_iterations
+            clf = LGBMClassifier(**param)
+            clf.fit(x, y, sample_weight=sample_weight, verbose=-1)
+            self.clf = clf
+
+
         self.scores_ = score
         self.score_ = full_auc
         self.feature_importance_ = feature_importance_df
@@ -137,15 +157,18 @@ class LGBMModel(Model):
         return 'LGBM'
 
     def predict(self, x) -> pd.DataFrame:
-        preds = np.zeros((len(x), self.n_classes, self.nfolds))
+        if self.use_extra_classifier:
+            mean_preds = self.clf.predict_proba(x, num_iteration=-1)
+            self.variance = None
+        else:
+            preds = np.zeros((len(x), self.n_classes, self.nfolds))
 
-        for i, clf in enumerate(self.clfs):
-            preds[:, :, i] = clf.predict_proba(x, num_iteration=clf.best_iteration_)
+            for i, clf in enumerate(self.clfs):
+                preds[:, :, i] = clf.predict_proba(x, num_iteration=clf.best_iteration_)
 
-        # variance over folds
-        self.variance = np.var(preds, axis=2)
-
-        mean_preds = np.mean(preds, axis=2)
+            # variance over folds
+            self.variance = np.var(preds, axis=2)
+            mean_preds = np.mean(preds, axis=2)
 
         #for clf in self.clfs:
         #    preds += clf.predict_proba(x, num_iteration=clf.best_iteration_) / len(self.clfs)

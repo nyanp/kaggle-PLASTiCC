@@ -26,20 +26,21 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
  'timescale_th0.5_min_ch3',
  'sn_salt2_ncall']
 
-# experiment40 - hostgal_photoz, sn_salt2_ncall
-class Experiment41(ExperimentDualModel):
-    def __init__(self, basepath, submit_path='output/experiment41c.csv', save_pseudo_label=False):
+# experiment53 + mamas 2nd-12th features
+class Experiment55(ExperimentDualModel):
+    def __init__(self, basepath, submit_path='output/experiment55.csv', save_pseudo_label=False):
         super().__init__(basepath=basepath,
                          features_inner=['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143','f144'],
                          features_extra=['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
                                          'f144',
-                                         'f052','f053','f061','f063','f361','f600','f500','f1003'],
+                                         'f052','f053','f061','f063','f361','f600','f500',
+                                         'f1080','f1086','f1087','f2002','f2003','f2004','f2005','f2006','f2007','f2008','f2009','f2010','f2011','f2012','f1090'],
                          model_inner=LGBMModel(nfolds=10, weight_mode='weighted'),
                          model_extra=LGBMModel(nfolds=10, weight_mode='weighted'),
                          submit_path=submit_path,
-                         log_name='experiment41c',
+                         log_name='experiment55',
                          drop_feat_inner=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'distmod', 'hostgal_photoz'] + blacklist,
                          drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'hostgal_photoz'] + blacklist,
                          postproc_version=2,

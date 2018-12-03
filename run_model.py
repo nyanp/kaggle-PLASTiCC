@@ -1,12 +1,10 @@
 from experiments.experiment50 import *
 from experiments.experiment51 import *
-from experiments.experiment52 import *
+from experiments.experiment53 import *
 
-exp = Experiment50(basepath='./')
-exp.execute()
+exp = Experiment53(basepath='./',
+                   submit_path='output/experiment53_2.csv',
+                   pseudo_n_loop=0,
+                   use_extra_classifier=True)
 
-exp = Experiment51(basepath='./')
-exp.execute()
-
-exp = Experiment52(basepath='./')
 exp.execute()
