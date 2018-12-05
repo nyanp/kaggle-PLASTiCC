@@ -29,7 +29,10 @@ class ExperimentDualModel:
                  pseudo_n_loop=0,
                  pseudo_th=0.97,
                  pseudo_classes=[90],
-                 save_pseudo_label=False):
+                 save_pseudo_label=False,
+                 cache_path_inner=None,
+                 cache_path_extra=None,
+                 use_cache=False):
 
         try:
             os.mkdir(basepath+log_name)
@@ -63,10 +66,10 @@ class ExperimentDualModel:
 
         self.logger.info('load features...')
         if self._use_inner:
-            self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner)
+            self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner, cache_path_inner, use_cache)
             gc.collect()
         if self._use_extra:
-            self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra)
+            self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra, cache_path_extra, use_cache)
             gc.collect()
             self.df_extra_pseudo = self.df_extra.copy()
 
@@ -76,7 +79,15 @@ class ExperimentDualModel:
         self.pseudo_th = pseudo_th
         self.save_pseudo_label = save_pseudo_label
 
-    def _setup(self, df, features, basepath, drop) -> pd.DataFrame:
+    def _setup(self, df, features, basepath, drop, cache_path=None, use_cache=False) -> pd.DataFrame:
+
+        if use_cache and cache_path is not None:
+            try:
+                print('load from cache: {}'.format(cache_path))
+                return pd.read_feather(cache_path)
+            except:
+                pass
+
         for f in tqdm(features):
             if self.submit_path is None:
                 tmp = pd.read_feather(basepath + 'features_tr/' + str(f) + '.f')
@@ -91,6 +102,9 @@ class ExperimentDualModel:
             drop_ = [d for d in drop if d in df]
             print('dropped: {}'.format(drop_))
             df.drop(drop_, axis=1, inplace=True)
+
+        if use_cache and cache_path:
+            df.to_feather(cache_path)
         return df
 
     def _exec(self, name, df, model, pseudo_df=None):
@@ -227,11 +241,11 @@ class ExperimentDualModel:
             self.logger.debug('totalCV (with pseudo): {}'.format(multi_weighted_logloss(self.oof.target, self.oof.reset_index().drop(['object_id', 'target'], axis=1))))
             self.logger.debug('totalCV (w/o pseudo):  {}'.format(multi_weighted_logloss(self.oof_cv.target, self.oof_cv.drop(['object_id', 'target'], axis=1))))
 
-            #try:
-            variance = self._merge_variance(self.df_inner, self.df_extra)
-            variance.reset_index().to_feather(self.logdir + 'variance_over_folds.f')
-            #except:
-            #    pass
+            try:
+                variance = self._merge_variance(self.df_inner, self.df_extra)
+                variance.reset_index().to_feather(self.logdir + 'variance_over_folds.f')
+            except:
+                pass
 
         if self.submit_path is not None:
             pred_all = pd.concat([pred_inner, pred_extra]).fillna(0)

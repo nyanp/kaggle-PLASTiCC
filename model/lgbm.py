@@ -6,7 +6,7 @@ from .loss import *
 import functools
 
 class LGBMModel(Model):
-    def __init__(self, param = None, random_state = 1, nfolds = 5, weight_mode='none', use_extra_classifier=False):
+    def __init__(self, param = None, random_state = 1, seed=None, nfolds = 5, weight_mode='none', use_extra_classifier=False):
 
         if param is None:
             self.param =  {
@@ -28,7 +28,11 @@ class LGBMModel(Model):
                 'verbose':-1
             }
         else:
+            print('customized params:{}'.format(param))
             self.param = param
+
+        if seed is not None:
+            self.param['seed'] = seed
         self.random_state = random_state
         self.n_classes = None
         self.feature_importance_ = None

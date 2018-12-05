@@ -26,20 +26,44 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
  'timescale_th0.5_min_ch3',
  'sn_salt2_ncall']
 
-# experiment41 + f1080, 1086, 1087
-class Experiment53(ExperimentDualModel):
+# experiment56 + hyperparameter tuning
+class Experiment56(ExperimentDualModel):
     def __init__(self, basepath,
-                 submit_path='output/experiment53.csv',
+                 submit_path='output/experiment56.csv',
                  pseudo_n_loop=3,
                  save_pseudo_label=False,
                  use_extra_classifier=False,
-                 log_name='experiment53',
+                 log_name='experiment56',
                  param=None,
                  seed=None,
                  cache_path_inner=None,
                  cache_path_extra=None,
-                 use_cache=False
+                 use_cache=False,
+                 pseudo_th=0.98 ### IMPORTANT
                  ):
+        if param is None:
+            param = {
+                'boosting_type': 'gbdt',
+                'objective': 'multiclass',
+                'num_class': 14,
+                'metric': 'multi_logloss',
+                'subsample': .9,
+                'colsample_bytree': .9,
+                'reg_alpha': 0,
+                'reg_lambda': 3,
+                'min_split_gain': 0,
+                'min_child_weight': 10,
+                'silent':True,
+                'verbosity':-1,
+                'learning_rate':0.1,
+                'max_depth':3,
+                'min_data_in_leaf':1,
+                'n_estimators':10000,
+                'max_bin':128,
+                'bagging_fraction':0.66,
+                'verbose':-1
+            }
+
         super().__init__(basepath=basepath,
                          features_inner=['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143','f144'],
@@ -56,7 +80,7 @@ class Experiment53(ExperimentDualModel):
                          postproc_version=2,
                          pseudo_classes=[90, 42],
                          pseudo_n_loop=pseudo_n_loop,
-                         pseudo_th=0.97,
+                         pseudo_th=pseudo_th,
                          save_pseudo_label=save_pseudo_label,
                          cache_path_inner=cache_path_inner,
                          cache_path_extra=cache_path_extra,
