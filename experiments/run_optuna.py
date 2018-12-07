@@ -144,30 +144,25 @@ def objective(trial):
     y = pd.read_feather('y.f')['target']
     n_folds = 5
 
-    print(len(np.unique(y)))
-
     x = x.reset_index(drop=True)[y.isin(classes_out)].reset_index(drop=True)
     y = y[y.isin(classes_out)].reset_index(drop=True)
-
-    print(x.shape)
-    print(len(np.unique(y)))
 
     param = {
         'objective': 'multiclass',
         'num_class': 9,
         'metric': 'multi_logloss',
         'verbose': -1,
-        'boosting_type': trial.suggest_categorical('boosting', ['gbdt', 'dart']),
-        'max_depth': trial.suggest_categorical('max_depth', [-1, 2, 3, 4, 5, 6, 7, 8]),
+        'boosting_type': 'gbdt',
+        'max_depth': 2,
         'learning_rate': 0.1,
         'subsample': trial.suggest_uniform('subsample', 0.05, 1.0),
-        'colsample_bytree': trial.suggest_uniform('subsample', 0.05, 1.0),
-        'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-8, 100),
-        'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-8, 100),
-        'min_split_gain': trial.suggest_loguniform('min_split_gain', 1e-8, 100),
-        'min_child_weight': trial.suggest_loguniform('min_child_weight', 1e-8, 100),
-        'max_bin': trial.suggest_categorical('max_bin', [100, 256]),
-        'min_data_in_leaf': trial.suggest_int('min_data_in_leaf', 1, 20),
+        'colsample_bytree': trial.suggest_uniform('colsample_bytree', 0.05, 1.0),
+        'reg_alpha': 0,
+        'reg_lambda': 0,
+        'min_split_gain': 0,
+        'min_child_weight': trial.suggest_loguniform('min_child_weight', 1e-3, 10),
+        'max_bin': 256,
+        'min_data_in_leaf': 9,
         'n_estimators': 10000,
     }
 
@@ -223,7 +218,7 @@ def run(param, x, y):
 
         loss = multi_weighted_logloss_(valid_y, oof_preds[valid_idx])
 
-        if loss > 0.75:
+        if loss > 0.9:
             raise optuna.structs.TrialPruned()
 
         print('Fold {} loss: {}'.format(n_fold, loss))
@@ -233,19 +228,22 @@ def run(param, x, y):
         gc.collect()
 
     full_auc = multi_weighted_logloss_(y, oof_preds)
-    return -full_auc
+
+    return full_auc
 
 if __name__ == '__main__':
     study = optuna.create_study()
-    study.optimize(objective, n_trials=5000)
 
-    print('Number of finished trials: {}'.format(len(study.trials)))
+    for i in range(100):
+        study.optimize(objective, n_trials=5)
 
-    print('Best trial:')
-    trial = study.best_trial
+        print('Number of finished trials: {}'.format(len(study.trials)))
 
-    print('  Value: {}'.format(trial.value))
+        print('Best trial:')
+        trial = study.best_trial
 
-    print('  Params: ')
-    for key, value in trial.params.items():
-        print('    {}: {}'.format(key, value))
+        print('  Value: {}'.format(trial.value))
+
+        print('  Params: ')
+        for key, value in trial.params.items():
+            print('    {}: {}'.format(key, value))

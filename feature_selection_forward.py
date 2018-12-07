@@ -14,10 +14,32 @@ baseline_features_inner = []
 baseline_features_extra = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
                                          'f144',
-                                         'f052','f053','f061','f063','f361','f600','f500','f1003','f1080','f1086','f1087']
+                                         'f052','f053','f061','f063','f361','f600','f500','f1003','f1080','f1086','f1087','f509',"f510_hsiao",]
 
 additional_features = [
-    'f2001','f2002','f2003','f2004','f2005','f2006','f2007','f2008','f2009','f2010','f2011','f2012','f2013','f2014','f2015','f2016'
+    "f510_nugent-sn1bc",
+    "f510_nugent-sn2n",
+    "f510_nugent-sn2p",
+    "f510_s11-2004hx",
+    "f510_s11-2005hl",
+    "f510_s11-2005hm",
+    "f510_s11-2005lc",
+    "f510_snana-04d1la",
+    "f510_snana-04d4jv",
+    "f510_snana-2004gq",
+    "f510_snana-2004gv",
+    "f510_snana-2004ib",
+    "f510_snana-2005hm",
+    "f510_snana-2006ep",
+    "f510_snana-2006ez",
+    "f510_snana-2006fo",
+    "f510_snana-2006ix",
+    "f510_snana-2006jo",
+    "f510_snana-2006lc",
+    "f510_snana-2007ms",
+    "f510_snana-2007nc",
+    "f510_snana-sdss004012",
+    "f510_snana-sdss014475"
 ]
 
 additional_features_ = [
@@ -195,6 +217,6 @@ def fs_per_column(n_loop:int = 100):
             features.drop(best_feat, axis=1, inplace=True)
 
 
-fs_per_file(16, 'log_fs_181203_mamas', fs_on='extra')
+fs_per_file(16, 'log_fs_181207_5', fs_on='extra')
 #fs_per_column(100)
 
