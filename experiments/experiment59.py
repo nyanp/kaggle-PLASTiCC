@@ -26,20 +26,20 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
  'timescale_th0.5_min_ch3',
  'sn_salt2_ncall']
 
-# experiment57 + hyperparameter found by optuna
-class Experiment58(ExperimentDualModel):
+# experiment57 + f510 (SDSS)
+class Experiment59(ExperimentDualModel):
     def __init__(self, basepath,
-                 submit_path='output/experiment58.csv',
+                 submit_path='output/experiment59_th0985.csv',
                  pseudo_n_loop=3,
                  save_pseudo_label=False,
                  use_extra_classifier=False,
-                 log_name='experiment58',
+                 log_name='experiment59_th0985',
                  param=None,
                  seed=None,
                  cache_path_inner=None,
                  cache_path_extra=None,
                  use_cache=False,
-                 pseudo_th=0.98 ### IMPORTANT
+                 pseudo_th=0.985 ### IMPORTANT
                  ):
         if param is None:
             param = {
@@ -47,19 +47,20 @@ class Experiment58(ExperimentDualModel):
                 'objective': 'multiclass',
                 'num_class': 14,
                 'metric': 'multi_logloss',
-                'subsample': .7,
-                'colsample_bytree': .7,
+                'subsample': .9,
+                'colsample_bytree': .9,
                 'reg_alpha': 0,
-                'reg_lambda': 0,
+                'reg_lambda': 3,
                 'min_split_gain': 0,
-                'min_child_weight': 0.2,
+                'min_child_weight': 10,
                 'silent':True,
                 'verbosity':-1,
-                'learning_rate':0.05,
-                'max_depth':2,
-                'min_data_in_leaf':9,
+                'learning_rate':0.1,
+                'max_depth':3,
+                'min_data_in_leaf':1,
                 'n_estimators':10000,
-                'max_bin':256,
+                'max_bin':128,
+                'bagging_fraction':0.66,
                 'verbose':-1
             }
 
@@ -69,7 +70,7 @@ class Experiment58(ExperimentDualModel):
                          features_extra=['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
                                          'f144',
-                                         'f052','f053','f061','f063','f361','f600','f500','f1003','f1080','f1086','f1087','f507','f509'],
+                                         'f052','f053','f061','f063','f361','f600','f500','f1003','f1080','f1086','f1087','f507','f509','f510'],
                          model_inner=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),
                          model_extra=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),
                          submit_path=submit_path,
