@@ -1,5 +1,6 @@
 import math
 import time
+import sys
 import pandas as pd
 import numpy as np
 import feather
@@ -107,26 +108,38 @@ def opt_(id, passband):
         return [id,passband]+[np.nan]*5
 
 
-df = feather.read_dataframe('../input/all_0.f')
-df = df[df.detected == 1]
-df.set_index('object_id', inplace=True)
+if __name__ == "__main__":
+    passbands = [1, 2, 3, 4]
+    df = pd.read_csv('../input/training_set.csv')
+    chunk = 300
+    n_skip = 0
 
-object_ids = df.index.unique()
-print('total {} objects'.format(object_ids))
+    df = df[df.detected == 1]
+    df.set_index('object_id', inplace=True)
 
-s = time.time()
+    object_ids = df.index.unique()
 
-r = Parallel(n_jobs=-1)([delayed(opt_)(i,p) for i,p in itertools.product(object_ids[:10],[0,1,2,3,4,5])])
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '--debug':
+            object_ids = object_ids[:10]
+        else:
+            n_skip = int(sys.argv[1])
 
-#r = []
-#for i, p in itertools.product(object_ids[:10],[0,1,2,3,4,5]):
-#    r.append(opt_(i, p))
+    print('chunk: {}, n_skip: {}'.format(chunk, n_skip))
 
-df = pd.DataFrame(np.array(r))
+    if n_skip > 0:
+        object_ids = object_ids[n_skip:]
+    print('total {} objects'.format(object_ids))
 
-print('params: {}'.format(r))
-print('elapsed time: {}'.format(time.time() - s))
-print(df.head())
+    s = time.time()
+    n_chunks = int(math.ceil(len(object_ids) / chunk))
+
+    for c in range(n_chunks):
+        offset = c * chunk
+
+        r = Parallel(n_jobs=-1)([delayed(opt_)(i,p) for i,p in itertools.product(object_ids[offset:offset+chunk],passbands)])
+        df = pd.DataFrame(np.array(r), columns=['object_id','passband']+["newling_loglike","newling_A", "newling_phi", "newling_sigma", "newling_k"])
+        df.to_feather('newling_{}_{}.f'.format(offset, offset+chunk-1))
 
 
 
