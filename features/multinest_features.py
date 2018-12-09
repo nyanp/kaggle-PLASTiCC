@@ -5,10 +5,10 @@ import numpy as np
 import feather
 import itertools
 from functools import partial
-from pymultinest.solve import solve
 from pymultinest.analyse import Analyzer
 from numba import jit
 from joblib import Parallel, delayed
+from .multinest_solve import solve
 
 
 def model_newling(params, t):
@@ -79,11 +79,11 @@ print('total {} objects'.format(object_ids))
 
 s = time.time()
 
-#r = Parallel(n_jobs=-1)([delayed(opt_)(i,p) for i,p in itertools.product(object_ids[:10],[0,1,2,3,4,5])])
+r = Parallel(n_jobs=-1)([delayed(opt_)(i,p) for i,p in itertools.product(object_ids[:10],[0,1,2,3,4,5])])
 
-r = []
-for i, p in itertools.product(object_ids[:10],[0,1,2,3,4,5]):
-    r.append(opt_(i, p))
+#r = []
+#for i, p in itertools.product(object_ids[:10],[0,1,2,3,4,5]):
+#    r.append(opt_(i, p))
 
 df = pd.DataFrame(np.array(r))
 
