@@ -17,29 +17,13 @@ baseline_features_extra = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010
                                          'f052','f053','f061','f063','f361','f600','f500','f1003','f1080','f1086','f1087','f509',"f510_hsiao",]
 
 additional_features = [
-    "f510_nugent-sn1bc",
-    "f510_nugent-sn2n",
-    "f510_nugent-sn2p",
-    "f510_s11-2004hx",
-    "f510_s11-2005hl",
-    "f510_s11-2005hm",
-    "f510_s11-2005lc",
-    "f510_snana-04d1la",
-    "f510_snana-04d4jv",
-    "f510_snana-2004gq",
-    "f510_snana-2004gv",
-    "f510_snana-2004ib",
-    "f510_snana-2005hm",
-    "f510_snana-2006ep",
-    "f510_snana-2006ez",
-    "f510_snana-2006fo",
-    "f510_snana-2006ix",
-    "f510_snana-2006jo",
-    "f510_snana-2006lc",
-    "f510_snana-2007ms",
-    "f510_snana-2007nc",
-    "f510_snana-sdss004012",
-    "f510_snana-sdss014475"
+    'f1100',
+    'f1101',
+    'f1102',
+    'f1103',
+    'f1104',
+    'f1105',
+    'f1106'
 ]
 
 additional_features_ = [
@@ -61,6 +45,27 @@ eltwise_feature_tables = [
 drop_feat_inner=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'distmod', 'hostgal_photoz']
 drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b']
 
+param = {
+    'boosting_type': 'gbdt',
+    'objective': 'multiclass',
+    'num_class': 14,
+    'metric': 'multi_logloss',
+    'subsample': .9,
+    'colsample_bytree': .9,
+    'reg_alpha': 0,
+    'reg_lambda': 3,
+    'min_split_gain': 0,
+    'min_child_weight': 10,
+    'silent': True,
+    'verbosity': -1,
+    'learning_rate': 0.1,
+    'max_depth': 3,
+    'min_data_in_leaf': 1,
+    'n_estimators': 10000,
+    'max_bin': 128,
+    'bagging_fraction': 0.66,
+    'verbose': -1
+}
 # per-file feature selection
 
 def beats(old_score, old_scores, new_score, new_scores):
@@ -90,8 +95,8 @@ def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
         'basepath': './',
         'features_inner': baseline_features_inner,
         'features_extra': baseline_features_extra,
-        'model_inner': LGBMModel(weight_mode='weighted', nfolds=n_cv),
-        'model_extra': LGBMModel(weight_mode='weighted', nfolds=n_cv),
+        'model_inner': LGBMModel(weight_mode='weighted', nfolds=n_cv, param=param),
+        'model_extra': LGBMModel(weight_mode='weighted', nfolds=n_cv, param=param),
         'submit_path': None,
         'log_name': log,
         'drop_feat_inner': drop_feat_inner,
@@ -217,6 +222,6 @@ def fs_per_column(n_loop:int = 100):
             features.drop(best_feat, axis=1, inplace=True)
 
 
-fs_per_file(16, 'log_fs_181207_5', fs_on='extra')
+fs_per_file(16, 'log_fs_181208_2', fs_on='extra')
 #fs_per_column(100)
 
