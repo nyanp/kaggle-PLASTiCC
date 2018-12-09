@@ -3,11 +3,12 @@ import time
 import pandas as pd
 import numpy as np
 import feather
+import itertools
 from functools import partial
 from pymultinest.solve import solve
 from pymultinest.analyse import Analyzer
 from numba import jit
-
+from joblib import Parallel, delayed
 
 
 def model_newling(params, t):
@@ -36,17 +37,20 @@ def prior_newling(params, data):
 
 
 def loglike(params, data):
-    y_predicted = model_newling(params, data['mjd'])
-    y_actual = data['flux']
+    try:
+        y_predicted = model_newling(params, data['mjd'])
+        y_actual = data['flux']
 
-    return -(((y_predicted - y_actual) / data['flux_err']) ** 2).sum()
-
+        return -(((y_predicted - y_actual) / data['flux_err']) ** 2).sum()
+    except:
+        return -1e30
 
 def opt(data, debug=False, logname="chains/1"):
+    if len(data) < 4:
+        return [np.nan]*5
     parameters = ["A", "phi", "sigma", "k"]
     prior = partial(prior_newling, data=data)
     log = partial(loglike, data=data)
-    print('start')
     result = solve(LogLikelihood=log, Prior=prior, sampling_efficiency=0.9,
                    n_live_points=100, evidence_tolerance=3, n_dims=len(parameters), verbose=debug,
                    outputfiles_basename=logname)
@@ -57,19 +61,35 @@ def opt(data, debug=False, logname="chains/1"):
     a = Analyzer(n_params=len(parameters), outputfiles_basename=logname)
     best = a.get_best_fit()
 
-    return best['log_likelihood'], best['parameters']
+    return [best['log_likelihood']]+best['parameters']
+
+def opt_(id, passband):
+    try:
+        return [id,passband]+opt(df.loc[id].query('passband == {}'.format(passband)), logname='chains/{}_{}'.format(id, passband))
+    except:
+        return [id,passband]+[np.nan]*5
 
 
 df = feather.read_dataframe('../input/all_0.f')
 df = df[df.detected == 1]
 df.set_index('object_id', inplace=True)
 
-s = time.time()
-loglike, params = opt(df.loc[1920].query('passband == 2'),debug=True, logname='chains/{}_{}'.format(1920, 2))
+object_ids = df.index.unique()
+print('total {} objects'.format(object_ids))
 
-print('log-likelihood: {}'.format(loglike))
-print('params: {}'.format(params))
+s = time.time()
+
+#r = Parallel(n_jobs=-1)([delayed(opt_)(i,p) for i,p in itertools.product(object_ids[:10],[0,1,2,3,4,5])])
+
+r = []
+for i, p in itertools.product(object_ids[:10],[0,1,2,3,4,5]):
+    r.append(opt_(i, p))
+
+df = pd.DataFrame(np.array(r))
+
+print('params: {}'.format(r))
 print('elapsed time: {}'.format(time.time() - s))
+print(df.head())
 
 
 
