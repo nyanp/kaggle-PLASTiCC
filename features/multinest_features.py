@@ -25,7 +25,7 @@ def solve(LogLikelihood, Prior, n_dims, **kwargs):
         except Exception as e:
             import sys
             sys.stderr.write('ERROR in prior: %s\n' % e)
-            sys.exit(1)
+            raise
 
     def SafeLoglikelihood(cube, ndim, nparams, lnew):
         a = np.array([cube[i] for i in range(n_dims)])
