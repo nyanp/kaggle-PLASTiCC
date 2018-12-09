@@ -84,7 +84,7 @@ def loglike(params, data):
         return -1e30
 
 def opt(data, debug=False, logname="chains/1"):
-    if len(data) < 4:
+    if len(data) < 5:
         return [np.nan]*5
     parameters = ["A", "phi", "sigma", "k"]
     prior = partial(prior_newling, data=data)
@@ -111,10 +111,14 @@ def opt_(id, passband):
 if __name__ == "__main__":
     passbands = [1, 2, 3, 4]
     df = pd.read_csv('../input/training_set.csv')
-    chunk = 300
+    meta = feather.read_dataframe('../input/meta.f')
+    meta = meta[meta.hostgal_photoz > 0]
+
+    chunk = 100
     n_skip = 0
 
     df = df[df.detected == 1]
+    df = df[df.object_id.isin(meta.object_id)] # only for extragalactic
     df.set_index('object_id', inplace=True)
 
     object_ids = df.index.unique()
