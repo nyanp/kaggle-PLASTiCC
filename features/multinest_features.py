@@ -5,10 +5,47 @@ import numpy as np
 import feather
 import itertools
 from functools import partial
+from pymultinest.run import run
 from pymultinest.analyse import Analyzer
 from numba import jit
 from joblib import Parallel, delayed
-from .multinest_solve import solve
+
+
+def solve(LogLikelihood, Prior, n_dims, **kwargs):
+    kwargs['n_dims'] = n_dims
+
+    outputfiles_basename = kwargs['outputfiles_basename']
+
+    def SafePrior(cube, ndim, nparams):
+        try:
+            a = np.array([cube[i] for i in range(n_dims)])
+            b = Prior(a)
+            for i in range(n_dims):
+                cube[i] = b[i]
+        except Exception as e:
+            import sys
+            sys.stderr.write('ERROR in prior: %s\n' % e)
+            sys.exit(1)
+
+    def SafeLoglikelihood(cube, ndim, nparams, lnew):
+        a = np.array([cube[i] for i in range(n_dims)])
+        l = float(LogLikelihood(a))
+        if not np.isfinite(l):
+            import sys
+            sys.stderr.write('WARNING: loglikelihood not finite: %f\n' % (l))
+            sys.stderr.write('         for parameters: %s\n' % a)
+            sys.stderr.write('         returned very low value instead\n')
+            return -1e100
+        return l
+
+    kwargs['LogLikelihood'] = SafeLoglikelihood
+    kwargs['Prior'] = SafePrior
+    run(**kwargs)
+
+    analyzer = Analyzer(n_dims, outputfiles_basename=outputfiles_basename)
+    best = analyzer.get_best_fit()
+
+    return [best['log_likelihood']]+best['parameters']
 
 
 def model_newling(params, t):
