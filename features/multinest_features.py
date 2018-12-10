@@ -94,7 +94,7 @@ def opt(data, debug=False, logname="chains/1"):
     log = partial(loglike, data=data)
     result = solve(LogLikelihood=log, Prior=prior, sampling_efficiency=0.9,
                    n_live_points=100, evidence_tolerance=3, n_dims=len(parameters), verbose=debug,
-                   outputfiles_basename=logname)
+                   outputfiles_basename=logname, max_iter=8000)
 
     print('finished.')
     print('result:')
