@@ -1,5 +1,6 @@
 import math
 import time
+import traceback
 import sys
 import pandas as pd
 import numpy as np
@@ -80,7 +81,9 @@ def loglike(params, data):
         y_actual = data['flux']
 
         return -(((y_predicted - y_actual) / data['flux_err']) ** 2).sum()
-    except:
+    except Exception as e:
+        print('!!!!! exception: {}'.format(e))
+        #print(traceback.format_exc())
         return -1e30
 
 def opt(data, debug=False, logname="chains/1"):
@@ -101,10 +104,12 @@ def opt(data, debug=False, logname="chains/1"):
 
     return [best['log_likelihood']]+best['parameters']
 
-def opt_(id, passband):
+def opt_(df, id, passband):
     try:
         return [id,passband]+opt(df.loc[id].query('passband == {}'.format(passband)), logname='chains/{}_{}'.format(id, passband))
-    except:
+    except Exception as e:
+        print('##### exception: {}'.format(e))
+        #print(traceback.format_exc())
         return [id,passband]+[np.nan]*5
 
 
@@ -114,7 +119,7 @@ if __name__ == "__main__":
     meta = feather.read_dataframe('../input/meta.f')
     meta = meta[meta.hostgal_photoz > 0]
 
-    chunk = 100
+    chunk = 30
     n_skip = 0
 
     df = df[df.detected == 1]
@@ -125,26 +130,31 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         if sys.argv[1] == '--debug':
-            object_ids = object_ids[:10]
+            object_ids = object_ids[:100]
         else:
             n_skip = int(sys.argv[1])
 
     print('chunk: {}, n_skip: {}'.format(chunk, n_skip))
+    print('total {} objects'.format(len(object_ids)))
 
-    if n_skip > 0:
-        object_ids = object_ids[n_skip:]
-    print('total {} objects'.format(object_ids))
 
     s = time.time()
     n_chunks = int(math.ceil(len(object_ids) / chunk))
 
+    #for i,p in itertools.product(object_ids,passbands):
+    #    r = opt_(i,p)
+
     for c in range(n_chunks):
         offset = c * chunk
-
-        r = Parallel(n_jobs=-1)([delayed(opt_)(i,p) for i,p in itertools.product(object_ids[offset:offset+chunk],passbands)])
-        df = pd.DataFrame(np.array(r), columns=['object_id','passband']+["newling_loglike","newling_A", "newling_phi", "newling_sigma", "newling_k"])
-        df.to_feather('newling_{}_{}.f'.format(offset, offset+chunk-1))
-
+        if offset < n_skip:
+            continue
+        try:
+            r = Parallel(n_jobs=-1)([delayed(opt_)(df,i,p) for i,p in itertools.product(object_ids[offset:offset+chunk],passbands)])
+            ret = pd.DataFrame(np.array(r), columns=['object_id','passband']+["newling_loglike","newling_A", "newling_phi", "newling_sigma", "newling_k"])
+            ret.to_feather('newling_{}_{}.f'.format(offset, offset+chunk-1))
+        except:
+            print(traceback.format_exc())
+            pass
 
 
 
