@@ -119,7 +119,7 @@ if __name__ == "__main__":
     meta = feather.read_dataframe('../input/meta.f')
     meta = meta[meta.hostgal_photoz > 0]
 
-    chunk = 30
+    chunk = 50
     n_skip = 0
 
     df = df[df.detected == 1]
