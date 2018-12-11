@@ -14,16 +14,12 @@ baseline_features_inner = []
 baseline_features_extra = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
                                          'f144',
-                                         'f052','f053','f061','f063','f361','f600','f500','f1003','f1080','f1086','f1087','f509',"f510_hsiao",]
+                                         'f052','f053','f061','f063','f361','f600','f1003','f1080','f1086',
+                                         'f1087','f500','f509','f510','f511','f512','f513']
 
 additional_features = [
-    'f1100',
-    'f1101',
-    'f1102',
-    'f1103',
-    'f1104',
-    'f1105',
-    'f1106'
+    'f1308','f1309',
+    'f001','f002','f026','f050','f051','f054','f101','f102','f103','f109','f150','f151','f152','f153'
 ]
 
 additional_features_ = [
@@ -82,7 +78,10 @@ def beats(old_score, old_scores, new_score, new_scores):
 
 
 def fs_per_file(n_loop:int = 10, log='log_fs', fs_on='extra'):
-    os.mkdir(log)
+    try:
+        os.mkdir(log)
+    except:
+        pass
 
     if fs_on == 'extra':
         baseline_features = baseline_features_extra
@@ -222,6 +221,6 @@ def fs_per_column(n_loop:int = 100):
             features.drop(best_feat, axis=1, inplace=True)
 
 
-fs_per_file(16, 'log_fs_181208_2', fs_on='extra')
+fs_per_file(16, 'log_fs_181211_2', fs_on='extra')
 #fs_per_column(100)
 
