@@ -33,7 +33,7 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
 'nugent-sn1bc_p_sn5_nugent-sn1bc_t0'
 ]
 
-# experiment65 with multiclassOVA
+# experiment65 + f514
 class Experiment67(ExperimentDualModel):
     def __init__(self, basepath,
                  submit_path='output/experiment67.csv',
@@ -51,7 +51,7 @@ class Experiment67(ExperimentDualModel):
         if param is None:
             param = {
                 'boosting_type': 'gbdt',
-                'objective': 'multiclassova',
+                'objective': 'multiclass',
                 'num_class': 14,
                 'metric': 'multi_logloss',
                 'subsample': .9,
@@ -78,7 +78,7 @@ class Experiment67(ExperimentDualModel):
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
                                          'f144',
                                          'f052','f053','f061','f063','f361','f600','f1003','f1080','f1086',
-                                         'f1087','f500','f509','f510','f511','f512','f513'],
+                                         'f1087','f500','f509','f510','f511','f512','f513','f514'],
                          model_inner=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),
                          model_extra=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),
                          submit_path=submit_path,
