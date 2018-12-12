@@ -33,14 +33,14 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
 'nugent-sn1bc_p_sn5_nugent-sn1bc_t0'
 ]
 
-# experiment65 + f026 + f109
-class Experiment66(ExperimentDualModel):
+# experiment65 with multiclassOVA
+class Experiment67(ExperimentDualModel):
     def __init__(self, basepath,
-                 submit_path='output/experiment66.csv',
+                 submit_path='output/experiment67.csv',
                  pseudo_n_loop=3,
                  save_pseudo_label=False,
                  use_extra_classifier=False,
-                 log_name='experiment66',
+                 log_name='experiment67',
                  param=None,
                  seed=None,
                  cache_path_inner=None,
@@ -51,7 +51,7 @@ class Experiment66(ExperimentDualModel):
         if param is None:
             param = {
                 'boosting_type': 'gbdt',
-                'objective': 'multiclass',
+                'objective': 'multiclassova',
                 'num_class': 14,
                 'metric': 'multi_logloss',
                 'subsample': .9,
@@ -76,7 +76,7 @@ class Experiment66(ExperimentDualModel):
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143','f144'],
                          features_extra=['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143',
-                                         'f144', 'f026','f109',
+                                         'f144',
                                          'f052','f053','f061','f063','f361','f600','f1003','f1080','f1086',
                                          'f1087','f500','f509','f510','f511','f512','f513'],
                          model_inner=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),

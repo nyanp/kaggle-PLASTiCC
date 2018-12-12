@@ -148,13 +148,12 @@ def objective(trial):
     y = y[y.isin(classes_out)].reset_index(drop=True)
 
     param = {
-        'objective': 'multiclass',
+        'objective': 'ova',
         'num_class': 9,
-        'metric': 'multi_logloss',
         'verbose': -1,
         'boosting_type': 'gbdt',
-        'max_depth': 2,
-        'learning_rate': 0.1,
+        'max_depth': trial.suggest_categorical('max_depth', [16, 32]),
+        'learning_rate': 0.001,
         'subsample': trial.suggest_uniform('subsample', 0.05, 1.0),
         'colsample_bytree': trial.suggest_uniform('colsample_bytree', 0.05, 1.0),
         'reg_alpha': 0,
@@ -162,7 +161,7 @@ def objective(trial):
         'min_split_gain': 0,
         'min_child_weight': trial.suggest_loguniform('min_child_weight', 1e-3, 10),
         'max_bin': 256,
-        'min_data_in_leaf': 9,
+        'min_data_in_leaf': trial.suggest_categorical('min_data_in_leaf', [1, 5, 10]),
         'n_estimators': 10000,
     }
 
@@ -209,7 +208,8 @@ def run(param, x, y):
 
         try:
             clf.fit(train_x, train_y, sample_weight=sample_weight, eval_set=[(valid_x, valid_y)],
-                    eval_metric=lgb_multi_weighted_logloss, verbose=-1, early_stopping_rounds=200)
+                    eval_metric=lgb_multi_weighted_logloss,
+                    verbose=20, early_stopping_rounds=500)
         except Exception as e:
             print('############## EXCEPTION ##################')
             print(e)
@@ -228,6 +228,7 @@ def run(param, x, y):
         gc.collect()
 
     full_auc = multi_weighted_logloss_(y, oof_preds)
+    print('full loss: {}'.format(full_auc))
 
     return full_auc
 
