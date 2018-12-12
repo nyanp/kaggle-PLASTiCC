@@ -19,7 +19,7 @@ end = -1
 
 use_estimated_z = False
 fixed_z = False
-source = 'salt2-extended'
+source = 'salt2'
 snr = 3
 debug = False
 feature = 'f515'
