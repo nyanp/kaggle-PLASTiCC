@@ -22,7 +22,7 @@ fixed_z = False
 source = 'salt2'
 snr = 3
 debug = False
-feature = 'f515'
+feature = 'f516'
 normalize = False
 
 for band in ['g','i','r','u','y','z']:
