@@ -21,7 +21,7 @@ if __name__ == "__main__":
     print('total {} rows.'.format(n))
 
     for i in range(0, 103800, 300):
-        n = 'f{}_{}_{}_{}.f'.format(meta,index,i,i+300)
+        n = 'f{}_{}_{}_{}.f'.format(index,meta,i,i+300)
         if not os.path.exists(n):
             print("{} doesn't exist".format(n))
 
