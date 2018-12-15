@@ -11,6 +11,7 @@ from .confusion_matrix import save_confusion_matrix
 from model.problem import classes
 import sys
 import os
+from typing import Dict
 
 
 class ExperimentDualModel:
@@ -29,9 +30,10 @@ class ExperimentDualModel:
                  pseudo_n_loop=0,
                  pseudo_th=0.97,
                  pseudo_classes=[90],
-                 save_pseudo_label=False,
+                 save_pseudo_label=True,
                  cache_path_inner=None,
                  cache_path_extra=None,
+                 pl_labels: Dict[str, str] = None,
                  use_cache=False):
 
         try:
@@ -78,6 +80,7 @@ class ExperimentDualModel:
         self.pseudo_classes = pseudo_classes
         self.pseudo_th = pseudo_th
         self.save_pseudo_label = save_pseudo_label
+        self.pl_labels = pl_labels
 
     def _setup(self, df, features, basepath, drop, cache_path=None, use_cache=False) -> pd.DataFrame:
 
@@ -212,6 +215,17 @@ class ExperimentDualModel:
 
         if self._use_extra:
             print('exec-outer')
+            if self.pl_labels:
+                df = self.df_extra_pseudo
+                for c in self.pl_labels:
+                    lbl = pd.read_feather(self.pl_labels[c])['object_id']
+                    pseudo = df[df.object_id.isin(lbl)]  # test
+                    non_pseudo = df[~df.object_id.isin(lbl)]  # train + test
+                    pseudo.target = c
+                    print('class {} : total {} samples for pseudo target'.format(c, len(pseudo)))
+                    df = pd.concat([pseudo, non_pseudo]).reset_index(drop=True)
+                self.df_extra_pseudo = df
+                pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, self.df_extra_pseudo)
             if self.pseudo_n_loop > 0 and self.submit_path:
                 pred_extra = None
                 for i in range(self.pseudo_n_loop):

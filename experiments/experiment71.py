@@ -38,7 +38,7 @@ class Experiment71(ExperimentDualModel):
     def __init__(self, basepath,
                  submit_path='output/experiment71.csv',
                  pseudo_n_loop=3,
-                 save_pseudo_label=False,
+                 save_pseudo_label=True,
                  use_extra_classifier=True,
                  n_estimators_extra_classifier=1000,
                  log_name='experiment71',
@@ -47,8 +47,19 @@ class Experiment71(ExperimentDualModel):
                  cache_path_inner=None,
                  cache_path_extra=None,
                  use_cache=False,
-                 pseudo_th=0.986 ### IMPORTANT
+                 pseudo_th=0.986, ### IMPORTANT
+                 use_pl_labels=True
                  ):
+
+        if use_pl_labels:
+            pl_labels = {
+                42: 'pseudo_label_class42_round2.f',
+                90: 'pseudo_label_class90_round2.f',
+            }
+            pseudo_n_loop=0
+        else:
+            pl_labels = None
+
         if param is None:
             param = {
                 'boosting_type': 'gbdt',
@@ -93,4 +104,5 @@ class Experiment71(ExperimentDualModel):
                          save_pseudo_label=save_pseudo_label,
                          cache_path_inner=cache_path_inner,
                          cache_path_extra=cache_path_extra,
-                         use_cache=use_cache)
+                         use_cache=use_cache,
+                         pl_labels=pl_labels)
