@@ -1,5 +1,16 @@
-from experiments.experiment67 import *
+import sys
+from experiments.experiment71 import *
 
 
-exp = Experiment67(basepath='./', submit_path='output/experiment67_th99.csv', log_name='experiment67_th99', pseudo_th=0.99)
-exp.execute()
+#exp = Experiment70(basepath='./')
+#exp.execute()
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        seed = int(sys.argv[1])
+    else:
+        seed = 0
+
+    print('Training start. seed: {}'.format(seed))
+    exp = Experiment71(basepath='./', pseudo_n_loop=0, seed=seed, submit_path='experiment71_seed{}.csv'.format(seed))
+    exp.execute()

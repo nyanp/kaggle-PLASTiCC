@@ -6,10 +6,14 @@ from .loss import *
 import functools
 
 class LGBMModel(Model):
-    def __init__(self, param = None, random_state = 1, seed=None, nfolds = 5, weight_mode='none', use_extra_classifier=False):
+    def __init__(self, param = None, random_state = 1,
+                 seed=None, nfolds = 5,
+                 weight_mode='none',
+                 use_extra_classifier=False,
+                 n_estimators_extra_classifier=None):
 
         if param is None:
-            self.param =  {
+            self.param = {
                 'boosting_type': 'gbdt',
                 'objective': 'multiclass',
                 'num_class': 14,
@@ -33,6 +37,8 @@ class LGBMModel(Model):
 
         if seed is not None:
             self.param['seed'] = seed
+
+        self.n_estimators_extra_classifier = n_estimators_extra_classifier
         self.random_state = random_state
         self.n_classes = None
         self.feature_importance_ = None
@@ -49,7 +55,7 @@ class LGBMModel(Model):
         }
         return d
 
-    def fit(self, x, y, logger = None):
+    def fit(self, x, y, logger = None, use_extra = True):
         for c in x:
             if x[c].count() == 0:
                 raise RuntimeError('#### column {} has no valid value!'.format(c))
@@ -134,13 +140,19 @@ class LGBMModel(Model):
         full_auc = multi_weighted_logloss(y, oof_preds)
         logger.info('*** full auc: {}'.format(full_auc))
 
-        if self.use_extra_classifier:
+        if use_extra and self.use_extra_classifier:
             if w_train is not None:
                 sample_weight = w_train
             else:
                 sample_weight = None
 
-            n_iterations = int(1.1 * np.mean(best_iterations))
+            if self.n_estimators_extra_classifier:
+                n_iterations = self.n_estimators_extra_classifier
+            else:
+                n_iterations = int(1.1 * np.mean(best_iterations))
+
+            print('*** training extra classifier (iteration:{}) **** '.format(n_iterations))
+            logger.info('*** training extra classifier (iteration:{}) **** '.format(n_iterations))
 
             # LightGBM parameters found by Bayesian optimization
             param = self.param.copy()
@@ -148,7 +160,6 @@ class LGBMModel(Model):
             clf = LGBMClassifier(**param)
             clf.fit(x, y, sample_weight=sample_weight, verbose=-1)
             self.clf = clf
-
 
         self.scores_ = score
         self.score_ = full_auc

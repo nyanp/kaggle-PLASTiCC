@@ -44,12 +44,12 @@ class Model:
 
         return x_train, y_train, x_test
 
-    def fit_predict(self, df: pd.DataFrame, logger = None, pseudo_df: pd.DataFrame = None) -> pd.DataFrame:
+    def fit_predict(self, df: pd.DataFrame, logger = None, pseudo_df: pd.DataFrame = None, use_extra: bool = True) -> pd.DataFrame:
         x_train, y_train, x_test = self.prep(df, pseudo_df=pseudo_df)
-        self.fit(x_train, y_train, logger)
+        self.fit(x_train, y_train, logger, use_extra)
         return self.predict(x_test)
 
-    def fit(self, x, y, logger = None):
+    def fit(self, x, y, logger = None, use_extra = True):
         raise NotImplementedError()
 
     def predict(self, x) -> pd.DataFrame:

@@ -107,7 +107,7 @@ class ExperimentDualModel:
             df.to_feather(cache_path)
         return df
 
-    def _exec(self, name, df, model, pseudo_df=None):
+    def _exec(self, name, df, model, pseudo_df=None, last_loop:bool=True):
         self.logger.info(name)
         self.logger.info('features: {}'.format(df.columns.tolist()))
         self.logger.info('model: {}'.format(model.name()))
@@ -119,7 +119,7 @@ class ExperimentDualModel:
             model.fit(x_train, y_train, self.logger)
             pred = None
         else:
-            pred = model.fit_predict(df, self.logger, pseudo_df=pseudo_df)
+            pred = model.fit_predict(df, self.logger, pseudo_df=pseudo_df, use_extra=last_loop)
 
         self.logger.info('training time: {}'.format(time.time() - s))
 
