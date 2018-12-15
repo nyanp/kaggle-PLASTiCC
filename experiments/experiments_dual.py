@@ -226,7 +226,7 @@ class ExperimentDualModel:
                     df = pd.concat([pseudo, non_pseudo]).reset_index(drop=True)
                 self.df_extra_pseudo = df
                 pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, self.df_extra_pseudo)
-            if self.pseudo_n_loop > 0 and self.submit_path:
+            elif self.pseudo_n_loop > 0 and self.submit_path:
                 pred_extra = None
                 for i in range(self.pseudo_n_loop):
                     if i > 0:
@@ -247,6 +247,7 @@ class ExperimentDualModel:
 
             print(self.oof.shape)
             print(self.oof_cv.shape)
+
 
             save_confusion_matrix(self.oof_cv.drop(['target', 'object_id'], axis=1).values, self.oof_cv['target'],
                                   self.logdir + 'oof_dual_wo_pseudo.png')
