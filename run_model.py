@@ -12,5 +12,5 @@ if __name__ == "__main__":
         seed = 0
 
     print('Training start. seed: {}'.format(seed))
-    exp = Experiment71(basepath='./', pseudo_n_loop=0, seed=seed, submit_path='experiment71_seed{}.csv'.format(seed))
+    exp = Experiment71(basepath='./', seed=seed, submit_path='experiment71_seed{}.csv'.format(seed))
     exp.execute()
