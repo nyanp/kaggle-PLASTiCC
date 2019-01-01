@@ -1,0 +1,10 @@
+astropy
+feather-format
+iminuit
+lightgbm
+matplotlib
+numpy
+pandas
+pyarrow==0.9.0
+sncosmo
+tqdm
