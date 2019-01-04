@@ -11,31 +11,20 @@ from features.f20x_timescale import *
 from features.f3xx_tsfresh import *
 from features.f40x_astropy import *
 
-debug=True
-cv_only=False
+from . import common
+from . import config
 
-if cv_only:
-    output = 'features_tr/'
-else:
-    output = 'features/'
+debug = config.TRAINING_ONLY
+output = config.FEATURE_DIR
+cv_only = config.TRAINING_ONLY
 
-meta = pd.read_feather('input/meta.f') # for each object_id
-
-if cv_only:
-    meta = meta[~meta.target.isnull()].reset_index(drop=True)
+meta = common.load_metadata()
 
 print('read all light curves...')
 
-if cv_only:
-    lc = pd.read_feather('input/train.f')
-    ls = pd.read_feather('input/lombscale_train.f')
-else:
-    lc = pd.read_feather('input/all.f') # for each observation
-    ls = None
+lc = common.load_lightcurve()
 
-#lc['id_passband'] = lc['object_id'].astype(str) + '_' + lc['passband'].astype(str)
-
-input = Input(meta, None, lc, ls)
+input = Input(meta, None, lc)
 
 f000_agg_ch_flux(input=input, debug=debug, target_dir=output)
 f001_agg_ch_flux_err(input=input, debug=debug, target_dir=output)

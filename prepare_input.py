@@ -1,15 +1,18 @@
 import pandas as pd
 
+import config
 from .util import timer
-
-
-DATA_DIR = "input/"
 
 
 def concat_to_feather(train, test, dst):
     tr = pd.read_csv(train, index=False)
     tt = pd.read_csv(test, index=False)
-    df = pd.concat([tr, tt]).reset_index(drop=True)
+
+    if tt:
+        df = pd.concat([tr, tt]).reset_index(drop=True)
+    else:
+        df = tr
+
     df.to_feather(dst)
 
 
@@ -23,14 +26,19 @@ def split_lightcurve(src, dst, n_split=30):
 
 if __name__ == "__main__":
     with timer("Convert metadata"):
-        concat_to_feather(DATA_DIR + "training_set_metadata.csv",
-                          DATA_DIR + "test_set_metadata.csv",
-                          DATA_DIR + "meta.f")
+        concat_to_feather(config.DATA_DIR + "training_set_metadata.csv",
+                          config.DATA_DIR + "test_set_metadata.csv",
+                          config.DATA_DIR + "meta.f")
 
     with timer("Convert light curves"):
-        concat_to_feather(DATA_DIR + "training_set.csv",
-                          DATA_DIR + "test_set.csv",
-                          DATA_DIR + "all.f")
+        concat_to_feather(config.DATA_DIR + "training_set.csv",
+                          config.DATA_DIR + "test_set.csv",
+                          config.DATA_DIR + "all.f")
+
+    with timer("Convert light curves"):
+        concat_to_feather(config.DATA_DIR + "training_set.csv",
+                          None,
+                          config.DATA_DIR + "train.f")
 
     with timer("Split light curves"):
-        split_lightcurve(DATA_DIR + "all.f", DATA_DIR + "all_{}.f")
+        split_lightcurve(config.DATA_DIR + "all.f", config.DATA_DIR + "all_{}.f")

@@ -7,11 +7,10 @@ import numpy as np
 
 
 class Input:
-    def __init__(self, meta, passband, lc, lombscargle):
+    def __init__(self, meta, passband, lc):
         self.meta = meta
         self.passband = passband
         self.lc = lc
-        self.ls = lombscargle
 
 
 
