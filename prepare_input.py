@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 
 import config
@@ -24,7 +26,22 @@ def split_lightcurve(src, dst, n_split=30):
         partial.to_feather(dst.format(i))
 
 
+def mkdir(dir):
+    try:
+        os.mkdir(dir)
+    except:
+        pass
+
+
 if __name__ == "__main__":
+    with timer("Make directory"):
+        mkdir(config.DATA_DIR)
+        mkdir(config.DEBUG_CSV_DIR)
+        mkdir(config.FEATURE_DIR)
+        mkdir(config.SHARE_DIR)
+        mkdir(config.SUBMIT_DIR)
+
+
     with timer("Convert metadata"):
         concat_to_feather(config.DATA_DIR + "training_set_metadata.csv",
                           config.DATA_DIR + "test_set_metadata.csv",
