@@ -33,6 +33,14 @@ def mkdir(dir):
         pass
 
 
+def make_passband_meta():
+    data = pd.read_feather(config.DATA_DIR + 'all.f')
+    max_flux = data.groupby(['object_id','passband'])['flux'].max().reset_index()
+    max_flux = pd.merge(max_flux, data[['object_id','passband','flux', 'mjd']], on=['object_id','passband','flux'], how='left')
+    max_flux.columns = ['object_id','passband','max(flux)','time(max(flux))']
+    max_flux.reset_index(drop=True).to_feather(config.DATA_DIR + 'passband_meta.f')
+
+
 if __name__ == "__main__":
     with timer("Make directory"):
         mkdir(config.DATA_DIR)
@@ -40,7 +48,6 @@ if __name__ == "__main__":
         mkdir(config.FEATURE_DIR)
         mkdir(config.SHARE_DIR)
         mkdir(config.SUBMIT_DIR)
-
 
     with timer("Convert metadata"):
         concat_to_feather(config.DATA_DIR + "training_set_metadata.csv",
@@ -57,5 +64,10 @@ if __name__ == "__main__":
                           None,
                           config.DATA_DIR + "train.f")
 
-    with timer("Split light curves"):
-        split_lightcurve(config.DATA_DIR + "all.f", config.DATA_DIR + "all_{}.f")
+    if config.USE_TEMPLATE_FIT_FEATURES:
+        with timer("Split light curves"):
+            split_lightcurve(config.DATA_DIR + "all.f", config.DATA_DIR + "all_{}.f")
+
+    if config.USE_TEMPLATE_FIT_FEATURES:
+    with timer("Cache time(max-flux)"):
+        make_passband_meta()

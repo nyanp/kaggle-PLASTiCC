@@ -21,6 +21,11 @@ def load_metadata() -> pd.DataFrame:
     return meta
 
 
+def load_passband_metadata() -> pd.DataFrame:
+    meta = pd.read_feather(config.DATA_DIR + "passband_meta.f")
+    return meta
+
+
 # "f210" => pd.DataFrame
 def load_feature(feature_id: str) -> pd.DataFrame:
     path = config.FEATURE_DIR + feature_id + ".f"

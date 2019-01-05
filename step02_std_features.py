@@ -19,12 +19,10 @@ output = config.FEATURE_DIR
 cv_only = config.TRAINING_ONLY
 
 meta = common.load_metadata()
-
-print('read all light curves...')
-
 lc = common.load_lightcurve()
+pb = common.load_passband_metadata()
 
-input = Input(meta, None, lc)
+input = Input(meta, pb, lc)
 
 f000_agg_ch_flux(input=input, debug=debug, target_dir=output)
 f001_agg_ch_flux_err(input=input, debug=debug, target_dir=output)

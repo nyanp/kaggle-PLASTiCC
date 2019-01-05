@@ -15,3 +15,5 @@ SUBMIT_DIR = "output/"
 
 REPLICA_MODE = True
 
+USE_TEMPLATE_FIT_FEATURES = True
+
