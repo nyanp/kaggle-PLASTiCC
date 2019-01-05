@@ -124,7 +124,7 @@ def f1010_redshift_difference_perch():
 def _make_redshift_feature(params, src_features: List[str], feature_id: str, nfolds: int,
                            remove_galactic_test_data: bool = True,
                            drop_features: List[str] = None):
-    x_train, x_test, y_train = _make_df(src_features, remove_galactic_test_data)
+    x_train, x_test, y_train = _make_df(src_features, remove_galactic_test_data, drop_features)
 
     feature = _estimate_redshift(params, x_train, x_test, y_train, nfolds=nfolds)
     common.save_feature(feature, feature_id)
