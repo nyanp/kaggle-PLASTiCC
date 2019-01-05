@@ -10,7 +10,7 @@ cosmo = default_cosmology.get()
 
 
 @feature('f1000')
-def f1000_salt2_normalized_chisq(input: Input):
+def f1000_salt2_normalized_chisq(input: Input, **kw):
     salt2 = common.load_feature("f500")
     meta_ = pd.merge(input.meta, salt2, on='object_id', how='left')
 
@@ -24,7 +24,7 @@ def f1000_salt2_normalized_chisq(input: Input):
 
 
 @feature('f1001')
-def f1001_detected_to_risetime_ratio(input: Input):
+def f1001_detected_to_risetime_ratio(input: Input, **kw):
     delta = common.load_feature("f050")
     risetime = common.load_feature("f053")
 
@@ -41,7 +41,7 @@ def f1001_detected_to_risetime_ratio(input: Input):
 
 
 @feature('f1002')
-def f1002_detected_to_falltime_ratio(input: Input):
+def f1002_detected_to_falltime_ratio(input: Input, **kw):
     delta = common.load_feature("f050")
     falltime = common.load_feature("f053")
 
@@ -62,7 +62,7 @@ def z2pc(z):
 
 
 @feature('f1003')
-def f1003_luminosity_by_estimated_redshift(input: Input):
+def f1003_luminosity_by_estimated_redshift(input: Input, **kw):
     aggregate = common.load_feature("f000")
     redshift = common.load_feature("f600")
     meta_ = pd.merge(input.meta, redshift, on='object_id', how='left')
@@ -95,7 +95,7 @@ def extract_features_postproc(df: pd.DataFrame):
 
 
 @feature('f1004')
-def f1004_tsfresh_flux(input: Input):
+def f1004_tsfresh_flux(input: Input, **kw):
     fcp = {
         'longest_strike_above_mean': None,
         'longest_strike_below_mean': None,
@@ -112,7 +112,7 @@ def f1004_tsfresh_flux(input: Input):
 
 
 @feature('f1005')
-def f1005_tsfresh_flux_per_passband(input: Input):
+def f1005_tsfresh_flux_per_passband(input: Input, **kw):
     fcp = {
         'fft_coefficient': [
                 {'coeff': 0, 'attr': 'abs'},
@@ -131,7 +131,7 @@ def f1005_tsfresh_flux_per_passband(input: Input):
 
 
 @feature('f1006')
-def f1006_tsfresh_mjd(input: Input):
+def f1006_tsfresh_mjd(input: Input, **kw):
     fcp = {
         'mean_change': None,
         'mean_abs_change': None,
@@ -154,7 +154,7 @@ def filter_lc_by_snr(lc: pd.DataFrame, snr: int):
 
 
 @feature('f1080')
-def f1080_snr3_minmax_diff(input: Input):
+def f1080_snr3_minmax_diff(input: Input, **kw):
     lc_detected = filter_lc_by_snr(input.lc, 3)
     mjddelta = lc_detected.groupby('object_id').agg({'mjd': ['min', 'max']})
     mjddelta['delta'] = mjddelta[mjddelta.columns[1]] - mjddelta[mjddelta.columns[0]]
@@ -164,7 +164,7 @@ def f1080_snr3_minmax_diff(input: Input):
 
 
 @feature('f1081')
-def f1081_first_is_detected(input: Input):
+def f1081_first_is_detected(input: Input, **kw):
     first = input.lc[['object_id', 'mjd', 'detected']].groupby('object_id').first()
     first.columns = ['mjd', 'detected_on_first_observation']
 
@@ -172,7 +172,7 @@ def f1081_first_is_detected(input: Input):
 
 
 @feature('f1082')
-def f1082_last_is_detected(input: Input):
+def f1082_last_is_detected(input: Input, **kw):
     last = input.lc[['object_id', 'mjd', 'detected']].groupby('object_id').last()
     last.columns = ['mjd', 'detected_on_last_observation']
 
@@ -180,19 +180,19 @@ def f1082_last_is_detected(input: Input):
 
 
 @feature('f1083')
-def f1083_max_flux_within_snr3(input: Input):
+def f1083_max_flux_within_snr3(input: Input, **kw):
     lc_detected = filter_lc_by_snr(input.lc)
     return aggregate_by_id_passbands(lc_detected, 'flux', ['max'], prefix='snr3_')
 
 
 @feature('f1084')
-def f1084_min_flux_within_snr3(input: Input):
+def f1084_min_flux_within_snr3(input: Input, **kw):
     lc_detected = filter_lc_by_snr(input.lc)
     return aggregate_by_id_passbands(lc_detected, 'flux', ['min'], prefix='snr3_')
 
 
 @feature('f1085')
-def f1085_luminosity_diff_within_snr3(input: Input):
+def f1085_luminosity_diff_within_snr3(input: Input, **kw):
     redshift = common.load_feature('f600')
     max_flux = common.load_feature('f1083')
     min_flux = common.load_feature('f1084')
@@ -215,7 +215,7 @@ def f1085_luminosity_diff_within_snr3(input: Input):
 
 
 @feature('f1086')
-def f1086_first_detected_to_prev_mjd_diff(input: Input):
+def f1086_first_detected_to_prev_mjd_diff(input: Input, **kw):
     lc = input.lc
     lc['mjd_prev'] = lc[['object_id', 'mjd']].groupby('object_id').shift(1)
     lc_detected = lc[lc.detected == 1]
@@ -227,7 +227,7 @@ def f1086_first_detected_to_prev_mjd_diff(input: Input):
 
 
 @feature('f1087')
-def f1087_last_detected_to_next_mjd_diff(input: Input):
+def f1087_last_detected_to_next_mjd_diff(input: Input, **kw):
     lc = input.lc
     lc['mjd_next'] = lc[['object_id', 'mjd']].groupby('object_id').shift(-1)
     lc_detected = lc[lc.detected == 1]
@@ -239,7 +239,7 @@ def f1087_last_detected_to_next_mjd_diff(input: Input):
 
 
 @feature('f1088')
-def f1088_first_detected_to_prev_mjd_diff_perch(input: Input):
+def f1088_first_detected_to_prev_mjd_diff_perch(input: Input, **kw):
     lc = input.lc
     lc['mjd_prev'] = lc[['object_id', 'mjd']].groupby('object_id').shift(1)
     lc_detected = lc[lc.detected == 1]
@@ -251,7 +251,7 @@ def f1088_first_detected_to_prev_mjd_diff_perch(input: Input):
 
 
 @feature('f1089')
-def f1089_last_detected_to_next_mjd_diff_perch(input: Input):
+def f1089_last_detected_to_next_mjd_diff_perch(input: Input, **kw):
     lc = input.lc
     lc['mjd_next'] = lc[['object_id', 'mjd']].groupby('object_id').shift(-1)
     lc_detected = lc[lc.detected == 1]
