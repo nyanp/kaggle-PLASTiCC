@@ -5,6 +5,8 @@ import traceback
 import gc
 import numpy as np
 
+import common
+
 
 class Input:
     def __init__(self, meta, passband, lc):
@@ -106,9 +108,11 @@ def feature(name, required_feature=None, required_feature_in=None):
                 ret = func(*args, **kwargs)
 
                 if kwargs['debug']:
-                    ret.head(1000).to_csv(kwargs['target_dir'] + '/{}.csv'.format(name))
+                    with_csv = True
+                else:
+                    with_csv = False
 
-                ret.reset_index(drop=True).to_feather(kwargs['target_dir'] + '/{}.f'.format(name))
+                common.save_feature(ret.reset_index(drop=True), name, with_csv)
 
                 print('end : {} (time: {})'.format(func.__name__, time.time() - s))
                 gc.collect()

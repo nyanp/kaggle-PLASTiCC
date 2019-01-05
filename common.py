@@ -28,10 +28,13 @@ def load_feature(feature_id: str) -> pd.DataFrame:
     return pd.read_feather(path)
 
 
-def save_feature(df: pd.DataFrame, feature_id: str):
+def save_feature(df: pd.DataFrame, feature_id: str, with_csv_dump: bool = False):
     if config.REPLICA_MODE:
         path = config.FEATURE_DIR + feature_id + "_replica.f"
     else:
         path = config.FEATURE_DIR + feature_id + ".f"
 
     df.to_feather(path)
+
+    if with_csv_dump:
+        df.head(1000).to_csv(config.DEBUG_CSV_DIR + feature_id + ".csv")

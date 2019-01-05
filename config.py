@@ -7,8 +7,11 @@ DATA_DIR = "input/"
 
 FEATURE_DIR = "features_all/"
 
+DEBUG_CSV_DIR = "features_all/"
+
 SHARE_DIR = "share/"
 
 SUBMIT_DIR = "output/"
 
 REPLICA_MODE = True
+

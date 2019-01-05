@@ -21,8 +21,8 @@ fcp = {
                 {'coeff': 0, 'attr': 'abs'},
                 {'coeff': 1, 'attr': 'abs'}
             ],
-        'kurtosis' : None,
-        'skewness' : None,
+        'kurtosis': None,
+        'skewness': None,
     },
 
     'mjd': {
