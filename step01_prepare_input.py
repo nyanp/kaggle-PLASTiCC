@@ -68,6 +68,5 @@ if __name__ == "__main__":
         with timer("Split light curves"):
             split_lightcurve(config.DATA_DIR + "all.f", config.DATA_DIR + "all_{}.f")
 
-    if config.USE_TEMPLATE_FIT_FEATURES:
     with timer("Cache time(max-flux)"):
         make_passband_meta()
