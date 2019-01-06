@@ -12,6 +12,13 @@ def load_lightcurve() -> pd.DataFrame:
     return pd.read_feather(path)
 
 
+def load_partial_lightcurve(index: int) -> pd.DataFrame:
+    assert index >= 0 and index <= 29
+    path = config.DATA_DIR + "all_{}.f".format(index)
+
+    return pd.read_feather(path)
+
+
 def load_metadata() -> pd.DataFrame:
     meta = pd.read_feather(config.DATA_DIR + "meta.f")
 

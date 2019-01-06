@@ -1,7 +1,7 @@
 import time
 from contextlib import contextmanager
 
-
+@contextmanager
 def timer(name):
     try:
         s = time.time()

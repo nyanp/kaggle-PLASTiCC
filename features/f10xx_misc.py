@@ -1,6 +1,7 @@
 import pandas as pd
 from astropy.cosmology import default_cosmology
 from tsfresh.feature_extraction import extract_features
+from tqdm import tqdm
 
 import common
 import config
@@ -103,12 +104,17 @@ def f1004_tsfresh_flux(input: Input, **kw):
         'mean_abs_change': None,
         'length': None,
     }
-    feat = extract_features(input.lc,
-                            column_id='object_id',
-                            column_value='flux',
-                            default_fc_parameters=fcp, n_jobs=12)
 
-    return extract_features_postproc(feat)
+    dfs = []
+    for i in tqdm(range(30)):
+        lc = common.load_partial_lightcurve(i)
+        partial = extract_features(lc,
+                                   column_id='object_id',
+                                   column_value='flux',
+                                   default_fc_parameters=fcp, n_jobs=12)
+        dfs.append(partial)
+
+    return extract_features_postproc(pd.concat(dfs))
 
 
 @feature('f1005')
@@ -121,13 +127,19 @@ def f1005_tsfresh_flux_per_passband(input: Input, **kw):
         'kurtosis': None,
         'skewness': None,
     }
-    feat = extract_features(input.lc,
-                            column_id='object_id',
-                            column_sort='mjd',
-                            column_kind='passband',
-                            column_value='flux',
-                            default_fc_parameters=fcp, n_jobs=12)
-    return extract_features_postproc(feat)
+
+    dfs = []
+    for i in tqdm(range(30)):
+        lc = common.load_partial_lightcurve(i)
+        partial = extract_features(lc,
+                                   column_id='object_id',
+                                   column_sort='mjd',
+                                   column_kind='passband',
+                                   column_value='flux',
+                                   default_fc_parameters=fcp, n_jobs=12)
+        dfs.append(partial)
+
+    return extract_features_postproc(pd.concat(dfs))
 
 
 @feature('f1006')
@@ -139,11 +151,15 @@ def f1006_tsfresh_mjd(input: Input, **kw):
     lc = input.lc
     df_det = lc[lc['detected'] == 1].copy()
 
-    feat = extract_features(df_det,
-                            column_id='object_id',
-                            column_value='mjd',
-                            default_fc_parameters=fcp, n_jobs=12)
-    return extract_features_postproc(feat)
+    dfs = []
+    for i in tqdm(range(30)):
+        lc = common.load_partial_lightcurve(i)
+        partial = extract_features(df_det,
+                                   column_id='object_id',
+                                   column_value='mjd',
+                                   default_fc_parameters=fcp, n_jobs=12)
+        dfs.append(partial)
+    return extract_features_postproc(pd.concat(dfs))
 
 
 def filter_lc_by_snr(lc: pd.DataFrame, snr: int):
@@ -155,7 +171,7 @@ def filter_lc_by_snr(lc: pd.DataFrame, snr: int):
 
 @feature('f1080')
 def f1080_snr3_minmax_diff(input: Input, **kw):
-    lc_detected = filter_lc_by_snr(input.lc, 3)
+    lc_detected = filter_lc_by_snr(input.lc, snr=3)
     mjddelta = lc_detected.groupby('object_id').agg({'mjd': ['min', 'max']})
     mjddelta['delta'] = mjddelta[mjddelta.columns[1]] - mjddelta[mjddelta.columns[0]]
     mjddelta = mjddelta['delta'].reset_index(drop=False)
@@ -181,13 +197,13 @@ def f1082_last_is_detected(input: Input, **kw):
 
 @feature('f1083')
 def f1083_max_flux_within_snr3(input: Input, **kw):
-    lc_detected = filter_lc_by_snr(input.lc)
+    lc_detected = filter_lc_by_snr(input.lc, snr=3)
     return aggregate_by_id_passbands(lc_detected, 'flux', ['max'], prefix='snr3_')
 
 
 @feature('f1084')
 def f1084_min_flux_within_snr3(input: Input, **kw):
-    lc_detected = filter_lc_by_snr(input.lc)
+    lc_detected = filter_lc_by_snr(input.lc, snr=3)
     return aggregate_by_id_passbands(lc_detected, 'flux', ['min'], prefix='snr3_')
 
 

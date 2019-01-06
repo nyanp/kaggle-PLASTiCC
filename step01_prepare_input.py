@@ -3,19 +3,22 @@ import os
 import pandas as pd
 
 import config
-from .util import timer
+from util import timer
 
 
-def concat_to_feather(train, test, dst):
-    tr = pd.read_csv(train, index=False)
-    tt = pd.read_csv(test, index=False)
+def concat_to_feather(train, test, dst, column_order=None):
+    tr = pd.read_csv(train)
 
-    if tt:
+    if test is not None:
+        tt = pd.read_csv(test)
         df = pd.concat([tr, tt]).reset_index(drop=True)
     else:
         df = tr
 
-    df.to_feather(dst)
+    if column_order is not None:
+        df[column_order].to_feather(dst)
+    else:
+        df.to_feather(dst)
 
 
 def split_lightcurve(src, dst, n_split=30):
@@ -52,7 +55,10 @@ if __name__ == "__main__":
     with timer("Convert metadata"):
         concat_to_feather(config.DATA_DIR + "training_set_metadata.csv",
                           config.DATA_DIR + "test_set_metadata.csv",
-                          config.DATA_DIR + "meta.f")
+                          config.DATA_DIR + "meta.f",
+                          column_order=['object_id', 'ra', 'decl', 'gal_l', 'gal_b', 'ddf',
+                                        'hostgal_specz', 'hostgal_photoz', 'hostgal_photoz_err',
+                                        'distmod', 'mwebv', 'target'])
 
     with timer("Convert light curves"):
         concat_to_feather(config.DATA_DIR + "training_set.csv",
