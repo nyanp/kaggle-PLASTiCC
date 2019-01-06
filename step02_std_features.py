@@ -11,8 +11,8 @@ from features.f20x_timescale import *
 from features.f3xx_tsfresh import *
 from features.f40x_astropy import *
 
-from . import common
-from . import config
+import common
+import config
 
 debug = config.TRAINING_ONLY
 output = config.FEATURE_DIR
