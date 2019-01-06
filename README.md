@@ -50,4 +50,5 @@ pip install -r requirements.txt
 You can change I/O directory and running mode by editing [config.py](config.py). See comments in the file in detail.
 
 ## Run
-See [entry_points.md](entry_points.md)
+See [entry_points.md](entry_points.md). If you just want to use precompiled feature set to train yuval/mamas's model,
+use feature files in share/ directory.
