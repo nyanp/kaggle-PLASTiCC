@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+from tqdm import tqdm
 
 import config
 from util import timer
@@ -24,7 +25,7 @@ def concat_to_feather(train, test, dst, column_order=None):
 def split_lightcurve(src, dst, n_split=30):
     df = pd.read_feather(src)
 
-    for i in range(n_split):
+    for i in tqdm(range(n_split)):
         partial = df[df.object_id % n_split == i].reset_index(drop=True)
         partial.to_feather(dst.format(i))
 
@@ -38,10 +39,13 @@ def mkdir(dir):
 
 def make_passband_meta():
     data = pd.read_feather(config.DATA_DIR + 'all.f')
-    max_flux = data.groupby(['object_id','passband'])['flux'].max().reset_index()
-    max_flux = pd.merge(max_flux, data[['object_id','passband','flux', 'mjd']], on=['object_id','passband','flux'], how='left')
-    max_flux.columns = ['object_id','passband','max(flux)','time(max(flux))']
-    max_flux.drop_duplicates(subset=['object_id','passband'], inplace=True)
+    print('')
+    max_flux = data.groupby(['object_id', 'passband'])['flux'].max().reset_index()
+    max_flux = pd.merge(max_flux, data[['object_id', 'passband', 'flux', 'mjd']],
+                        on=['object_id', 'passband', 'flux'],
+                        how='left')
+    max_flux.columns = ['object_id', 'passband', 'max(flux)', 'time(max(flux))']
+    max_flux.drop_duplicates(subset=['object_id', 'passband'], inplace=True)
     max_flux.reset_index(drop=True).to_feather(config.DATA_DIR + 'passband_meta.f')
 
 
@@ -66,13 +70,13 @@ if __name__ == "__main__":
                           config.DATA_DIR + "test_set.csv",
                           config.DATA_DIR + "all.f")
 
-    with timer("Convert light curves"):
+    with timer("Convert light curves(training data)"):
         concat_to_feather(config.DATA_DIR + "training_set.csv",
                           None,
                           config.DATA_DIR + "train.f")
 
     if config.USE_TEMPLATE_FIT_FEATURES:
-        with timer("Split light curves"):
+        with timer("Split light curves into 30 chunks"):
             split_lightcurve(config.DATA_DIR + "all.f", config.DATA_DIR + "all_{}.f")
 
     with timer("Cache time(max-flux)"):
