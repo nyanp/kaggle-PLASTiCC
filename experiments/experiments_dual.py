@@ -23,10 +23,10 @@ class ExperimentDualModel:
                  model_extra: Model,
                  submit_filename: str = 'submission.csv',
                  log_name: str = 'default',
-                 drop_feat_inner = None,
-                 drop_feat_extra = None,
-                 logging_level = logging.DEBUG,
-                 postproc_version = 1,
+                 drop_feat_inner=None,
+                 drop_feat_extra=None,
+                 logging_level=logging.DEBUG,
+                 postproc_version=1,
                  mode='both',
                  pseudo_n_loop=0,
                  pseudo_th=0.97,
@@ -38,18 +38,18 @@ class ExperimentDualModel:
                  use_cache=False):
 
         try:
-            os.mkdir(basepath+log_name)
+            os.mkdir(basepath + log_name)
         except:
             pass
 
         df = pd.read_feather(basepath + 'input/meta.f')
 
         self.mode = mode
-        self.logdir = basepath+log_name+"/"
+        self.logdir = basepath + log_name + "/"
 
         if submit_filename is None:
             self.submit_filename = None
-            df = df[~df.target.isnull()].reset_index() # use training data only
+            df = df[~df.target.isnull()].reset_index()  # use training data only
         else:
             self.submit_filename = basepath + submit_filename
 
@@ -62,17 +62,19 @@ class ExperimentDualModel:
         self.model_extra = model_extra
         self.logger = logging.getLogger(log_name)
         self.logger.setLevel(logging_level)
-        self.fh = logging.FileHandler(self.logdir+'log.txt')
+        self.fh = logging.FileHandler(self.logdir + 'log.txt')
         self.fh.setLevel(logging_level)
         if len(self.logger.handlers) == 0:
             self.logger.addHandler(self.fh)
 
         self.logger.info('load features...')
         if self._use_inner:
-            self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner, cache_path_inner, use_cache)
+            self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner, cache_path_inner,
+                                        use_cache)
             gc.collect()
         if self._use_extra:
-            self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra, cache_path_extra, use_cache)
+            self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra, cache_path_extra,
+                                        use_cache)
             gc.collect()
             self.df_extra_pseudo = self.df_extra.copy()
 
@@ -111,7 +113,7 @@ class ExperimentDualModel:
             df.to_feather(cache_path)
         return df
 
-    def _exec(self, name, df, model, pseudo_df=None, last_loop:bool=True):
+    def _exec(self, name, df, model, pseudo_df=None, last_loop: bool = True):
         self.logger.info(name)
         self.logger.info('features: {}'.format(df.columns.tolist()))
         self.logger.info('model: {}'.format(model.name()))
@@ -128,13 +130,13 @@ class ExperimentDualModel:
         self.logger.info('training time: {}'.format(time.time() - s))
 
         importance = model.feature_importances()
-        importance.reset_index(drop=True).to_feather(self.logdir+'importance_{}.f'.format(name))
+        importance.reset_index(drop=True).to_feather(self.logdir + 'importance_{}.f'.format(name))
 
         fi = importance.groupby('feature')['importance'].mean().reset_index()
         fi.sort_values(by='importance', ascending=False, inplace=True)
         fi = fi.reset_index(drop=True)
         self.logger.debug('importance:')
-        for i in range(min(len(fi),30)):
+        for i in range(min(len(fi), 30)):
             self.logger.debug('{} : {}'.format(fi.loc[i, 'feature'], fi.loc[i, 'importance']))
 
         oof, y = model.get_oof_prediction()
@@ -161,7 +163,7 @@ class ExperimentDualModel:
         df = pd.concat([inner, outer]).sort_values(by='object_id').fillna(0).reset_index(drop=True)
         df.set_index('object_id', inplace=True)
         df['target'] = df['target'].astype(np.int32)
-        return df[['target']+['class_'+str(i) for i in classes]]
+        return df[['target'] + ['class_' + str(i) for i in classes]]
 
     def _merge_variance(self, df_inner, df_extra):
         inner = pd.DataFrame(self.model_inner.variance,
@@ -175,7 +177,7 @@ class ExperimentDualModel:
         print(df.head())
         if 'object_id' in df:
             df.set_index('object_id', inplace=True)
-        return df[['class_'+str(i) for i in classes]]
+        return df[['class_' + str(i) for i in classes]]
 
     def _update_pseudo_label(self, pred_extra: pd.DataFrame, round: int):
         print('before update: {} training samples'.format(
@@ -190,16 +192,16 @@ class ExperimentDualModel:
 
             print('total {} samples exceeds threshold'.format(len(obj_ids)))
 
-            df = self.df_extra_pseudo # train + test
-            pseudo = df[df.object_id.isin(obj_ids)] # test
-            non_pseudo = df[~df.object_id.isin(obj_ids)] # train + test
+            df = self.df_extra_pseudo  # train + test
+            pseudo = df[df.object_id.isin(obj_ids)]  # test
+            non_pseudo = df[~df.object_id.isin(obj_ids)]  # train + test
 
             pseudo.target = cls
             self.df_extra_pseudo = pd.concat([pseudo, non_pseudo]).reset_index(drop=True)
 
             if self.save_pseudo_label:
-                tmp = pd.DataFrame({'object_id':pseudo.object_id})
-                tmp.reset_index(drop=True).to_feather(self.logdir+'pseudo_label_class{}_round{}.f'.format(cls, round))
+                tmp = pd.DataFrame({'object_id': pseudo.object_id})
+                tmp.reset_index(drop=True).to_feather(self.logdir + 'pseudo_label_class{}_round{}.f'.format(cls, round))
 
         print('after update: {} training samples'.format(
             self.df_extra_pseudo[~self.df_extra_pseudo.target.isnull()].shape))
@@ -226,20 +228,23 @@ class ExperimentDualModel:
                     print('class {} : total {} samples for pseudo target'.format(c, len(pseudo)))
                     df = pd.concat([pseudo, non_pseudo]).reset_index(drop=True)
                 self.df_extra_pseudo = df
-                pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, self.df_extra_pseudo)
+                pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra,
+                                                            self.df_extra_pseudo)
             elif self.pseudo_n_loop > 0 and self.submit_filename:
                 pred_extra = None
                 for i in range(self.pseudo_n_loop):
                     if i > 0:
                         self._update_pseudo_label(pred_extra, i)
-                    pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, self.df_extra_pseudo)
+                    pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra,
+                                                                self.df_extra_pseudo)
             else:
                 pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, None)
 
         if self._use_extra and self._use_inner:
             self.oof = self._merge_oof(oof_inner, oof_outer, self.df_inner, self.df_extra_pseudo)
-            save_confusion_matrix(self.oof.drop('target', axis=1).values, self.oof['target'], self.logdir+'oof_dual.png')
-            self.oof.reset_index().to_feather(self.logdir+'oof.f')
+            save_confusion_matrix(self.oof.drop('target', axis=1).values, self.oof['target'],
+                                  self.logdir + 'oof_dual.png')
+            self.oof.reset_index().to_feather(self.logdir + 'oof.f')
 
             object_ids = self._train_ids()
             print('using data: {}'.format(len(object_ids)))
@@ -249,13 +254,14 @@ class ExperimentDualModel:
             print(self.oof.shape)
             print(self.oof_cv.shape)
 
-
             save_confusion_matrix(self.oof_cv.drop(['target', 'object_id'], axis=1).values, self.oof_cv['target'],
                                   self.logdir + 'oof_dual_wo_pseudo.png')
             self.oof_cv.to_feather(self.logdir + 'oof_wo_pseudo.f')
 
-            self.logger.debug('totalCV (with pseudo): {}'.format(multi_weighted_logloss(self.oof.target, self.oof.reset_index().drop(['object_id', 'target'], axis=1))))
-            self.logger.debug('totalCV (w/o pseudo):  {}'.format(multi_weighted_logloss(self.oof_cv.target, self.oof_cv.drop(['object_id', 'target'], axis=1))))
+            self.logger.debug('totalCV (with pseudo): {}'.format(
+                multi_weighted_logloss(self.oof.target, self.oof.reset_index().drop(['object_id', 'target'], axis=1))))
+            self.logger.debug('totalCV (w/o pseudo):  {}'.format(
+                multi_weighted_logloss(self.oof_cv.target, self.oof_cv.drop(['object_id', 'target'], axis=1))))
 
             try:
                 variance = self._merge_variance(self.df_inner, self.df_extra)
@@ -285,5 +291,3 @@ class ExperimentDualModel:
             return self.model_inner.scores()
         else:
             return self.model_extra.scores()
-
-

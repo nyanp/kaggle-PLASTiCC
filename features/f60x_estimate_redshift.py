@@ -34,8 +34,8 @@ def f600_estimate_redshift():
         'n_jobs': -1
     }
     features = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-         'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
-         'f143', 'f144', 'f150', 'f052', 'f053', 'f061', 'f063', 'f361']
+                'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
+                'f143', 'f144', 'f150', 'f052', 'f053', 'f061', 'f063', 'f361']
 
     # NOTE: remove_galactic_test_data=False is meaningless. It is enabled just to reproduce original feature value.
     _make_redshift_feature(params, features, "f600", nfolds=5, remove_galactic_test_data=False)
@@ -56,8 +56,8 @@ def f601_estimate_redshift():
         'n_jobs': -1
     }
     features = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-         'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
-         'f143', 'f144', 'f150', 'f052', 'f053', 'f061', 'f063', 'f361']
+                'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
+                'f143', 'f144', 'f150', 'f052', 'f053', 'f061', 'f063', 'f361']
     _make_redshift_feature(params, features, "f601", nfolds=10)
 
 
@@ -76,8 +76,8 @@ def f603_estimate_redshift():
         'n_jobs': -1
     }
     features = ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-                'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108','f140','f141','f142','f143', 'f144',
-                'f052','f053','f061','f063','f361','f500']
+                'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142', 'f143', 'f144',
+                'f052', 'f053', 'f061', 'f063', 'f361', 'f500']
     drop_features = ['ra', 'decl', 'gal_l', 'gal_b', 'ddf',
                      'hostgal_specz', 'hostgal_photoz',
                      'max(flux)_ch2', 'max(flux)_ch3', 'max(flux)_ch4', 'max(flux)_ch5',
@@ -194,10 +194,10 @@ def _estimate_redshift(params, x_train, x_test, y_train, feature_name='hostgal_z
         print(i)
         test_preds[:, i] = clf.predict(x_test)
 
-    df_oof = pd.DataFrame({'actual':y_train,
-                  'photoz': x_train['hostgal_photoz'],
-                  'photoz_err': x_train['hostgal_photoz_err'],
-                  'predicted':oof_preds.flatten()})
+    df_oof = pd.DataFrame({'actual': y_train,
+                           'photoz': x_train['hostgal_photoz'],
+                           'photoz_err': x_train['hostgal_photoz_err'],
+                           'predicted': oof_preds.flatten()})
 
     print('MSE of photoz - spcez (original)')
     print(mean_squared_error(df_oof['actual'], df_oof['photoz']))
@@ -206,7 +206,7 @@ def _estimate_redshift(params, x_train, x_test, y_train, feature_name='hostgal_z
     print(mean_squared_error(df_oof['actual'], df_oof['predicted']))
 
     f_test = pd.DataFrame({'predicted': test_preds.mean(axis=1),
-                            'object_id': x_test.index})
+                           'object_id': x_test.index})
 
     f_train = pd.DataFrame({'predicted': oof_preds.flatten(),
                             'object_id': x_train.index})
