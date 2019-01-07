@@ -40,16 +40,17 @@ def extract_feature(meta: pd.DataFrame, feature: int, data_index: List[int]):
         end = n
         script = 'run_template.py'
 
-        print('script: {}, index: {}, {}-{}, chunk:{}'.format(script, meta, start, end, chunksize))
+        print('script: {}, index: {}, {}-{}, chunk:{}'.format(script, d, start, end, chunksize))
 
         for i in range(start, end, chunksize):
             chunk_start = i
             chunk_end = min(end, i + chunksize)
 
             try:
-                subprocess.call(["python", script, feature, str(d), str(chunk_start), str(chunk_end)])
+                subprocess.call(["python", script, str(feature), str(d), str(chunk_start), str(chunk_end)])
             except:
                 print('###### catch exception: {}-{} ######'.format(chunk_start, chunk_end))
+                raise
 
             if config.USE_FIRST_CHUNK_FOR_TEMPLATE_FITTING:
                 return

@@ -53,16 +53,17 @@ def extract_features(meta: pd.DataFrame,
                      zbounds: str = 'estimated',
                      skip: int = 0,
                      end: int = -1,
-                     clip_bounds: bool = True,
-                     t_bounds: bool = True,
+                     clip_bounds: bool = False,
+                     t_bounds: bool = False,
                      columns: List[str] = None):
     if normalize:
         try:
             for band in ['g', 'i', 'r', 'u', 'y', 'z']:
-                b = read_bandpass('../lsst/total_{}.dat'.format(band), wave_unit=u.nm, trim_level=0.001,
+                b = read_bandpass('lsst/total_{}.dat'.format(band), wave_unit=u.nm, trim_level=0.001,
                                   name='lsst{}_n'.format(band), normalize=True)
                 sncosmo.register(b, 'lsst{}_n'.format(band))
         except:
+            raise
             pass
 
     with timer('dropping meta'):
@@ -87,22 +88,24 @@ def extract_features(meta: pd.DataFrame,
 
     params = model.param_names
 
-    if columns is None:
-        columns = ['chisq', 'ncall'] + [source + '_' + c for c in params] + [source + '_' + c + '_err' for c in params]
-    ret = pd.DataFrame(columns=columns)
-
-    prefix = source
-    if zbounds == 'fixed':
-        prefix += '_f_'
+    if columns:
+        ret = pd.DataFrame(columns=columns)
     else:
-        prefix += '_p_'
+        columns = ['chisq', 'ncall'] + [source + '_' + c for c in params] + [source + '_' + c + '_err' for c in params]
+        ret = pd.DataFrame(columns=columns)
 
-    prefix += 'sn{}_'.format(snr)
+        prefix = source
+        if zbounds == 'fixed':
+            prefix += '_f_'
+        else:
+            prefix += '_p_'
 
-    if normalize:
-        prefix += 'n_'
+        prefix += 'sn{}_'.format(snr)
 
-    ret.columns = [prefix + c for c in ret.columns]
+        if normalize:
+            prefix += 'n_'
+
+        ret.columns = [prefix + c for c in ret.columns]
 
     n_errors = 0
 
@@ -117,10 +120,10 @@ def extract_features(meta: pd.DataFrame,
             ret.loc[object_id] = fit_lc(model, meta, lc, object_id, zbounds, clip_bounds, t_bounds, snr)
         except:
             n_errors += 1
-            pass
 
-        if i == 30 and n_errors == 31:
-            raise RuntimeError('All 30 first attempts were failed. stopped')
+            if i == 30 and n_errors == 31:
+                print('All 30 first attempts were failed. stopped')
+                raise
 
     print('total {} data processed. {} data was skipped'.format(len(meta), n_errors))
 

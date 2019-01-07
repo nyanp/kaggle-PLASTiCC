@@ -7,13 +7,15 @@ from features.lc_fit_common import extract_features
 # run template.py [feature_id] [data_index] [start_row] [end_row]
 
 if __name__ == "__main__":
-
     parameters = {
         500: {
-            'source': 'salt2-extended',
+            'source': 'salt2',
             'normalize': False,
             'snr': 5,
-            'zbounds': 'default'
+            'zbounds': 'default',
+            'columns': ['sn_salt2_chisq', 'sn_salt2_ncall',
+                        'sn_salt2_z', 'sn_salt2_t0', 'sn_salt2_x0', 'sn_salt2_x1', 'sn_salt2_c',
+                        'sn_salt2_z_err', 'sn_salt2_t0_err', 'sn_salt2_x0_err', 'sn_salt2_x1_err', 'sn_salt2_c_err']
         },
         505: {
             'source': 'salt2-extended',
@@ -81,13 +83,8 @@ if __name__ == "__main__":
         },
     }
 
-    param = parameters[type]
-    print('param: {}'.format(param))
-
-    meta = common.load_metadata()
-    meta = meta[meta.hostgal_photoz > 0].reset_index(drop=True)
-
-    if len(sys.argv) < 6:
+    if len(sys.argv) < 5:
+        print(sys.argv)
         raise RuntimeError('Specify Data Index')
 
     type = int(sys.argv[1])
@@ -96,6 +93,13 @@ if __name__ == "__main__":
     end = int(sys.argv[4])
     lc = common.load_partial_lightcurve(data_index)
     dst_id = 'f{}_{}_{}_{}'.format(type, data_index, skip, end)
+
+    param = parameters[type]
+    print('param: {}'.format(param))
+    print('data_index: {}, skip: {}, end: {}, dst_id: {}'.format(data_index, skip, end, dst_id))
+
+    meta = common.load_metadata()
+    meta = meta[meta.hostgal_photoz > 0].reset_index(drop=True)
 
     dst = extract_features(meta, lc, skip=skip, end=end, **param)
     common.save_feature(dst, dst_id, with_csv_dump=config.USE_FIRST_CHUNK_FOR_TEMPLATE_FITTING)
