@@ -41,6 +41,7 @@ def make_passband_meta():
     max_flux = data.groupby(['object_id','passband'])['flux'].max().reset_index()
     max_flux = pd.merge(max_flux, data[['object_id','passband','flux', 'mjd']], on=['object_id','passband','flux'], how='left')
     max_flux.columns = ['object_id','passband','max(flux)','time(max(flux))']
+    max_flux.drop_duplicates(subset=['object_id','passband'], inplace=True)
     max_flux.reset_index(drop=True).to_feather(config.DATA_DIR + 'passband_meta.f')
 
 
