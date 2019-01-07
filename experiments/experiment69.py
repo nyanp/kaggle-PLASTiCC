@@ -36,7 +36,7 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
 # experiment62 + f515
 class Experiment69(ExperimentDualModel):
     def __init__(self, basepath,
-                 submit_path='output/experiment69.csv',
+                 submit_filename='output/experiment69.csv',
                  pseudo_n_loop=3,
                  save_pseudo_label=False,
                  use_extra_classifier=False,
@@ -46,7 +46,7 @@ class Experiment69(ExperimentDualModel):
                  cache_path_inner=None,
                  cache_path_extra=None,
                  use_cache=False,
-                 pseudo_th=0.985 ### IMPORTANT
+                 pseudo_th=0.985  ### IMPORTANT
                  ):
         if param is None:
             param = {
@@ -81,7 +81,7 @@ class Experiment69(ExperimentDualModel):
                                          'f1087','f500','f509','f510','f511','f512','f513','f515','f516'],
                          model_inner=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),
                          model_extra=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),
-                         submit_path=submit_path,
+                         submit_filename=submit_filename,
                          log_name=log_name,
                          drop_feat_inner=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'distmod', 'hostgal_photoz'] + blacklist,
                          drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'hostgal_photoz'] + blacklist,

@@ -12,6 +12,7 @@ from model.problem import classes
 import sys
 import os
 from typing import Dict
+import common
 
 
 class ExperimentDualModel:
@@ -20,7 +21,7 @@ class ExperimentDualModel:
                  features_extra: List[str],
                  model_inner: Model,
                  model_extra: Model,
-                 submit_path: str = 'output/submission.csv',
+                 submit_filename: str = 'submission.csv',
                  log_name: str = 'default',
                  drop_feat_inner = None,
                  drop_feat_extra = None,
@@ -46,11 +47,11 @@ class ExperimentDualModel:
         self.mode = mode
         self.logdir = basepath+log_name+"/"
 
-        if submit_path is None:
-            self.submit_path = None
+        if submit_filename is None:
+            self.submit_filename = None
             df = df[~df.target.isnull()].reset_index() # use training data only
         else:
-            self.submit_path = basepath + submit_path
+            self.submit_filename = basepath + submit_filename
 
         df['extra'] = (df['hostgal_photoz'] > 0.0).astype(np.int32)
 
@@ -92,7 +93,7 @@ class ExperimentDualModel:
                 pass
 
         for f in tqdm(features):
-            if self.submit_path is None:
+            if self.submit_filename is None:
                 tmp = pd.read_feather(basepath + 'features_tr/' + str(f) + '.f')
             else:
                 tmp = pd.read_feather(basepath + 'features_all/' + str(f) + '.f')
@@ -117,7 +118,7 @@ class ExperimentDualModel:
         self.logger.info('param: {}'.format(model.get_params()))
         s = time.time()
 
-        if self.submit_path is None:
+        if self.submit_filename is None:
             x_train, y_train, _ = model.prep(df)
             model.fit(x_train, y_train, self.logger)
             pred = None
@@ -226,7 +227,7 @@ class ExperimentDualModel:
                     df = pd.concat([pseudo, non_pseudo]).reset_index(drop=True)
                 self.df_extra_pseudo = df
                 pred_extra, oof_outer, y_outer = self._exec('extra', self.df_extra, self.model_extra, self.df_extra_pseudo)
-            elif self.pseudo_n_loop > 0 and self.submit_path:
+            elif self.pseudo_n_loop > 0 and self.submit_filename:
                 pred_extra = None
                 for i in range(self.pseudo_n_loop):
                     if i > 0:
@@ -262,7 +263,7 @@ class ExperimentDualModel:
             except:
                 pass
 
-        if self.submit_path is not None:
+        if self.submit_filename is not None:
             pred_all = pd.concat([pred_inner, pred_extra]).fillna(0)
             if self.postproc_version == 1:
                 pred_all = add_class99(pred_all)
@@ -270,8 +271,8 @@ class ExperimentDualModel:
                 pred_all = add_class99_2(pred_all)
             else:
                 raise NotImplementedError()
-            submit(pred_all, self.submit_path)
 
+            common.save_submit_file(pred_all, self.submit_filename)
 
     def score(self, type='extra'):
         if type == 'inner':

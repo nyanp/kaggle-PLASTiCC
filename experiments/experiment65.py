@@ -1,6 +1,9 @@
 from experiments.experiments_dual import ExperimentDualModel
 from model.lgbm import LGBMModel
 
+import config
+import os
+
 blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
  '3__fft_coefficient__coeff_1__attr_"abs"',
  'ddf',
@@ -36,7 +39,7 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
 # experiment62 + f513
 class Experiment65(ExperimentDualModel):
     def __init__(self, basepath,
-                 submit_path='output/experiment65.csv',
+                 submit_filename='experiment65.csv',
                  pseudo_n_loop=3,
                  save_pseudo_label=False,
                  use_extra_classifier=False,
@@ -46,7 +49,7 @@ class Experiment65(ExperimentDualModel):
                  cache_path_inner=None,
                  cache_path_extra=None,
                  use_cache=False,
-                 pseudo_th=0.985 ### IMPORTANT
+                 pseudo_th=0.985  ### IMPORTANT
                  ):
         if param is None:
             param = {
@@ -81,7 +84,7 @@ class Experiment65(ExperimentDualModel):
                                          'f1087','f500','f509','f510','f511','f512','f513'],
                          model_inner=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),
                          model_extra=LGBMModel(nfolds=10, param=param, weight_mode='weighted', use_extra_classifier=use_extra_classifier, seed=seed),
-                         submit_path=submit_path,
+                         submit_filename=submit_filename,
                          log_name=log_name,
                          drop_feat_inner=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'distmod', 'hostgal_photoz'] + blacklist,
                          drop_feat_extra=['hostgal_specz', 'ra', 'decl', 'gal_l', 'gal_b', 'hostgal_photoz'] + blacklist,

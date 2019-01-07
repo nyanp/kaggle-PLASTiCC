@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 
 import config
@@ -50,3 +51,12 @@ def save_feature(df: pd.DataFrame, feature_id: str, with_csv_dump: bool = False)
 
     if with_csv_dump:
         df.head(1000).to_csv(config.DEBUG_CSV_DIR + feature_id + ".csv")
+
+
+def save_submit_file(pred: pd.DataFrame, filename: str):
+    path = os.path.join(config.SUBMIT_DIR, filename)
+
+    if 'object_id' in pred:
+        pred.to_csv(path, index=False)
+    else:
+        pred.to_csv(path, index=True)
