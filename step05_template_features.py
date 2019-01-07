@@ -16,7 +16,7 @@ features_to_run = [500, 505, 506, 507, 509, 510, 511, 512, 513, 515, 516]
 
 
 def merge_features():
-    p = Path('../features_all/')
+    p = Path('features_all/')
     for feature in features_to_run:
         print('Merge feature {}'.format(feature))
         files = [str(f) for f in list(p.glob('f{}_*.f'.format(feature)))]
