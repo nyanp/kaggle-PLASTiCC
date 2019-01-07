@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 import common
 import config
+import gc
 from .common import *
 
 cosmo = default_cosmology.get()
@@ -113,6 +114,7 @@ def f1004_tsfresh_flux(input: Input, **kw):
                                    column_value='flux',
                                    default_fc_parameters=fcp, n_jobs=0)
         dfs.append(partial.reset_index())
+        gc.collect()
 
     return extract_features_postproc(pd.concat(dfs))
 
@@ -138,6 +140,7 @@ def f1005_tsfresh_flux_per_passband(input: Input, **kw):
                                    column_value='flux',
                                    default_fc_parameters=fcp, n_jobs=0)
         dfs.append(partial.reset_index())
+        gc.collect()
 
     return extract_features_postproc(pd.concat(dfs))
 
@@ -159,6 +162,8 @@ def f1006_tsfresh_mjd(input: Input, **kw):
                                    column_value='mjd',
                                    default_fc_parameters=fcp, n_jobs=0)
         dfs.append(partial.reset_index())
+        gc.collect()
+
     return extract_features_postproc(pd.concat(dfs))
 
 

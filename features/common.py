@@ -116,7 +116,6 @@ def feature(name, required_feature=None, required_feature_in=None):
 
                 print('end : {} (time: {})'.format(func.__name__, time.time() - s))
                 gc.collect()
-                return ret
             except Exception as e:
                 print(colored('error on function {}'.format(func.__name__), 'red'))
                 print(type(e))
