@@ -1,28 +1,31 @@
-import pandas as pd
-from typing import List
-from tqdm import tqdm
-from model.model import Model
-import logging
-import time
 import gc
-from model.postproc import *
-from model.lgbm import multi_weighted_logloss
-from .confusion_matrix import save_confusion_matrix
-from model.problem import classes
-import sys
+import logging
 import os
+import time
+from typing import List
+
+import pandas as pd
+from tqdm import tqdm
+
+from model.lgbm import multi_weighted_logloss
+from model.model import Model
+from model.postproc import *
+from model.problem import classes
+from .confusion_matrix import save_confusion_matrix
+
+
 from typing import Dict
 import common
 
 
 class ExperimentDualModel:
-    def __init__(self, basepath: str,
+    def __init__(self,
                  features_inner: List[str],
                  features_extra: List[str],
                  model_inner: Model,
                  model_extra: Model,
                  submit_filename: str = 'submission.csv',
-                 log_name: str = 'default',
+                 logdir: str = 'default',
                  drop_feat_inner=None,
                  drop_feat_extra=None,
                  logging_level=logging.DEBUG,
@@ -38,20 +41,20 @@ class ExperimentDualModel:
                  use_cache=False):
 
         try:
-            os.mkdir(basepath + log_name)
+            os.mkdir(logdir)
         except:
             pass
 
-        df = pd.read_feather(basepath + 'input/meta.f')
+        df = common.load_metadata()
 
         self.mode = mode
-        self.logdir = basepath + log_name + "/"
+        self.logdir = logdir
 
         if submit_filename is None:
             self.submit_filename = None
             df = df[~df.target.isnull()].reset_index()  # use training data only
         else:
-            self.submit_filename = basepath + submit_filename
+            self.submit_filename = submit_filename
 
         df['extra'] = (df['hostgal_photoz'] > 0.0).astype(np.int32)
 
@@ -60,21 +63,19 @@ class ExperimentDualModel:
 
         self.model_inner = model_inner
         self.model_extra = model_extra
-        self.logger = logging.getLogger(log_name)
+        self.logger = logging.getLogger(logdir)
         self.logger.setLevel(logging_level)
-        self.fh = logging.FileHandler(self.logdir + 'log.txt')
+        self.fh = logging.FileHandler(os.path.join(self.logdir, 'log.txt'))
         self.fh.setLevel(logging_level)
         if len(self.logger.handlers) == 0:
             self.logger.addHandler(self.fh)
 
         self.logger.info('load features...')
         if self._use_inner:
-            self.df_inner = self._setup(self.df_inner, features_inner, basepath, drop_feat_inner, cache_path_inner,
-                                        use_cache)
+            self.df_inner = self._setup(self.df_inner, features_inner, drop_feat_inner, cache_path_inner, use_cache)
             gc.collect()
         if self._use_extra:
-            self.df_extra = self._setup(self.df_extra, features_extra, basepath, drop_feat_extra, cache_path_extra,
-                                        use_cache)
+            self.df_extra = self._setup(self.df_extra, features_extra, drop_feat_extra, cache_path_extra, use_cache)
             gc.collect()
             self.df_extra_pseudo = self.df_extra.copy()
 
@@ -85,7 +86,7 @@ class ExperimentDualModel:
         self.save_pseudo_label = save_pseudo_label
         self.pl_labels = pl_labels
 
-    def _setup(self, df, features, basepath, drop, cache_path=None, use_cache=False) -> pd.DataFrame:
+    def _setup(self, df, features, drop, cache_path=None, use_cache=False) -> pd.DataFrame:
 
         if use_cache and cache_path is not None:
             try:
@@ -95,13 +96,8 @@ class ExperimentDualModel:
                 pass
 
         for f in tqdm(features):
-            if self.submit_filename is None:
-                tmp = pd.read_feather(basepath + 'features_tr/' + str(f) + '.f')
-            else:
-                tmp = pd.read_feather(basepath + 'features_all/' + str(f) + '.f')
-
+            tmp = common.load_feature(f)
             tmp['object_id'] = tmp['object_id'].astype(np.int32)
-
             df = pd.merge(df, tmp, on='object_id', how='left')
 
         if drop is not None:
@@ -130,7 +126,7 @@ class ExperimentDualModel:
         self.logger.info('training time: {}'.format(time.time() - s))
 
         importance = model.feature_importances()
-        importance.reset_index(drop=True).to_feather(self.logdir + 'importance_{}.f'.format(name))
+        importance.reset_index(drop=True).to_feather(os.path.join(self.logdir, 'importance_{}.f'.format(name)))
 
         fi = importance.groupby('feature')['importance'].mean().reset_index()
         fi.sort_values(by='importance', ascending=False, inplace=True)
@@ -201,7 +197,7 @@ class ExperimentDualModel:
 
             if self.save_pseudo_label:
                 tmp = pd.DataFrame({'object_id': pseudo.object_id})
-                tmp.reset_index(drop=True).to_feather(self.logdir + 'pseudo_label_class{}_round{}.f'.format(cls, round))
+                tmp.reset_index(drop=True).to_feather(os.path.join(self.logdir, 'pseudo_label_class{}_round{}.f'.format(cls, round)))
 
         print('after update: {} training samples'.format(
             self.df_extra_pseudo[~self.df_extra_pseudo.target.isnull()].shape))
@@ -243,8 +239,8 @@ class ExperimentDualModel:
         if self._use_extra and self._use_inner:
             self.oof = self._merge_oof(oof_inner, oof_outer, self.df_inner, self.df_extra_pseudo)
             save_confusion_matrix(self.oof.drop('target', axis=1).values, self.oof['target'],
-                                  self.logdir + 'oof_dual.png')
-            self.oof.reset_index().to_feather(self.logdir + 'oof.f')
+                                  os.path.join(self.logdir, 'oof_dual.png'))
+            self.oof.reset_index().to_feather(os.path.join(self.logdir, 'oof.f'))
 
             object_ids = self._train_ids()
             print('using data: {}'.format(len(object_ids)))
@@ -255,8 +251,8 @@ class ExperimentDualModel:
             print(self.oof_cv.shape)
 
             save_confusion_matrix(self.oof_cv.drop(['target', 'object_id'], axis=1).values, self.oof_cv['target'],
-                                  self.logdir + 'oof_dual_wo_pseudo.png')
-            self.oof_cv.to_feather(self.logdir + 'oof_wo_pseudo.f')
+                                  os.path.join(self.logdir, 'oof_dual_wo_pseudo.png'))
+            self.oof_cv.to_feather(os.path.join(self.logdir, 'oof_wo_pseudo.f'))
 
             self.logger.debug('totalCV (with pseudo): {}'.format(
                 multi_weighted_logloss(self.oof.target, self.oof.reset_index().drop(['object_id', 'target'], axis=1))))
@@ -265,7 +261,7 @@ class ExperimentDualModel:
 
             try:
                 variance = self._merge_variance(self.df_inner, self.df_extra)
-                variance.reset_index().to_feather(self.logdir + 'variance_over_folds.f')
+                variance.reset_index().to_feather(os.path.join(self.logdir, 'variance_over_folds.f'))
             except:
                 pass
 

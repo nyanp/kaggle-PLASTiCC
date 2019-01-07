@@ -54,6 +54,7 @@ if __name__ == "__main__":
         mkdir(config.DATA_DIR)
         mkdir(config.DEBUG_CSV_DIR)
         mkdir(config.FEATURE_DIR)
+        mkdir(config.MODEL_DIR)
         mkdir(config.SHARE_DIR)
         mkdir(config.SUBMIT_DIR)
 

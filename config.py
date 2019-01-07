@@ -13,6 +13,8 @@ SHARE_DIR = "share/"
 
 SUBMIT_DIR = "output/"
 
+MODEL_DIR = "model/"
+
 REPLICA_MODE = True
 
 USE_TEMPLATE_FIT_FEATURES = True
