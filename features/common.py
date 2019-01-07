@@ -3,6 +3,7 @@ import time
 from termcolor import colored
 import traceback
 import gc
+import os
 import numpy as np
 
 import common
@@ -64,7 +65,7 @@ def requires_one(meta, feature_name, src_file, target_dir, on='object_id', debug
     if debug:
         print('load {} and merge to get {}'.format(src_file, feature_name))
 
-    d = pd.read_feather(target_dir + '/' + src_file)
+    d = pd.read_feather(os.path.join(target_dir, src_file))
 
     len_before = len(meta)
     meta = pd.merge(meta, d, on=on, how='left')
