@@ -16,10 +16,9 @@ class Input:
         self.lc = lc
 
 
-
 def unstack(aggs):
     if 'passband' in aggs and 'object_id' in aggs:
-        aggs.set_index(['object_id','passband'], inplace=True)
+        aggs.set_index(['object_id', 'passband'], inplace=True)
 
     aggs = aggs.unstack()
     aggs.columns = [e[0] + '_ch' + str(e[1]) for e in aggs.columns]
@@ -47,9 +46,9 @@ def aggregate_by_id(lc, col, agg):
 def diff_among_ch(meta: pd.DataFrame, agg, target='flux', skip=1, prefix=''):
     cols = []
     for c in range(6 - skip):
-        n = prefix+'{}({})_ch{}'.format(agg, target, c + skip)
-        p = prefix+'{}({})_ch{}'.format(agg, target, c)
-        dst = prefix+'diff({}({}))_{}_{}'.format(agg, target, c, c + skip)
+        n = prefix + '{}({})_ch{}'.format(agg, target, c + skip)
+        p = prefix + '{}({})_ch{}'.format(agg, target, c)
+        dst = prefix + 'diff({}({}))_{}_{}'.format(agg, target, c, c + skip)
         meta[dst] = meta[n] - meta[p]
         cols.append(dst)
 
@@ -86,14 +85,17 @@ def requires(meta, feature_name, src_file, target_dir, on='object_id', debug=Fal
 def percentile(n):
     def percentile_(x):
         return np.percentile(x, n)
+
     percentile_.__name__ = 'percentile_{}'.format(n)
     return percentile_
+
 
 def _top(f):
     if isinstance(f, list):
         return f[0]
     else:
         return f
+
 
 def feature(name, required_feature=None, required_feature_in=None):
     def decorator(func):
@@ -104,7 +106,8 @@ def feature(name, required_feature=None, required_feature_in=None):
 
                 meta = kwargs['input'].meta
                 if required_feature is not None and _top(required_feature) not in meta:
-                    kwargs['input'].meta = requires(meta, required_feature, required_feature_in, kwargs['target_dir'], debug=kwargs['debug'])
+                    kwargs['input'].meta = requires(meta, required_feature, required_feature_in, kwargs['target_dir'],
+                                                    debug=kwargs['debug'])
 
                 ret = func(*args, **kwargs)
 
