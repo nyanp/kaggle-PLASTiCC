@@ -34,4 +34,4 @@ def f517_blending_salts():
         df.drop(weighted_sum, axis=1, inplace=True)
         df.drop(weights, axis=1, inplace=True)
 
-        common.save_feature(df[['object_id'] + ['salt2-{}-weighted-avg'.format(p) for p in params]], 'f517')
+    common.save_feature(df[['object_id'] + ['salt2-{}-weighted-avg'.format(p) for p in params]], 'f517')
