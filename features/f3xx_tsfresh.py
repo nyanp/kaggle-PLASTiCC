@@ -8,13 +8,9 @@ import numpy as np
 
 def postproc(ext):
     ext.reset_index(inplace=True)
-
-    ext = pd.concat([ext, ext['id'].str.split('_', expand=True)], axis=1)
-    ext.rename(columns={0: 'object_id', 1: 'passband'}, inplace=True)
-    ext['object_id'] = ext['object_id'].astype(np.int64)
-    ext['passband'] = ext['passband'].astype(np.int64)
+    ext['passband'] = (ext['id'] % 10).astype(np.int64)
+    ext['object_id'] = (ext['id'] // 10).astype(np.int64)
     ext.drop('id', axis=1, inplace=True)
-
     return unstack(ext)
 
 
@@ -22,6 +18,8 @@ def postproc(ext):
 def f300_num_peaks(input: Input, debug=True, target_dir='.'):
     ext = extract_features(input.lc[['id_passband', 'flux']], n_jobs=0, column_id='id_passband',
                            default_fc_parameters={"number_peaks": [{"n": 1}, {"n": 5}]})
+    print(ext.head())
+    print(ext.columns.tolist())
     return postproc(ext)
 
 

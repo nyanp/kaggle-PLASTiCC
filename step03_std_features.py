@@ -1,3 +1,4 @@
+import gc
 from features.f3xx_tsfresh import *
 from features.f40x_astropy import *
 
@@ -12,7 +13,15 @@ meta = common.load_metadata()
 lc = common.load_lightcurve()
 pb = common.load_passband_metadata()
 
-lc['id_passband'] = lc['object_id'].astype(str) + '_' + lc['passband'].astype(str)
+input = Input(meta, pb, lc)
+f400_lombscargle(input=input, debug=debug, target_dir=output)
+
+del lc['detected']
+del lc['flux_err']
+lc['passband'] = lc['passband'].astype(np.uint8)
+gc.collect()
+
+lc['id_passband'] = lc['object_id'] * 10 + lc['passband']
 input = Input(meta, pb, lc)
 
 f300_num_peaks(input=input, debug=debug, target_dir=output)
@@ -33,5 +42,3 @@ f340_number_crossing_m(input=input, debug=debug, target_dir=output)
 f350_linear_trend(input=input, debug=debug, target_dir=output)
 f361_fft_coefficient(input=input, debug=debug, target_dir=output)
 f370_fft_aggregated(input=input, debug=debug, target_dir=output)
-
-f400_lombscargle(input=input, debug=debug, target_dir=output)
