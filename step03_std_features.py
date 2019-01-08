@@ -12,7 +12,7 @@ meta = common.load_metadata()
 lc = common.load_lightcurve()
 pb = common.load_passband_metadata()
 
-lc['id_passband'] = lc['object_id'].astype(str) + lc['passband'].astype(str)
+lc['id_passband'] = lc['object_id'].astype(str) + '_' + lc['passband'].astype(str)
 input = Input(meta, pb, lc)
 
 f300_num_peaks(input=input, debug=debug, target_dir=output)
