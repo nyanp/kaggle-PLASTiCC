@@ -1,8 +1,6 @@
 from experiments.experiments_dual import ExperimentDualModel
 from model.lgbm import LGBMModel
 
-import config
-import os
 
 blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
              '3__fft_coefficient__coeff_1__attr_"abs"',

@@ -60,3 +60,8 @@ def save_submit_file(pred: pd.DataFrame, filename: str):
         pred.to_csv(path, index=False)
     else:
         pred.to_csv(path, index=True)
+
+
+def save_shared_file(features: pd.DataFrame, filename: str):
+    path = os.path.join(config.SHARE_DIR, filename)
+    features.to_feather(path)

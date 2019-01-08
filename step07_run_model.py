@@ -1,5 +1,3 @@
-import sys
-
 import config
 from experiments.experiment65 import *
 
