@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 features_to_run = [500, 505, 506, 507, 509, 510, 511, 512, 513, 515, 516]
 
-# step05_template_features.py  : create all features (it takes 6+ months in 64 core machine)
-# step05_template_features.py n : create features where object_id % 30 == n (it takes 10 days)
+# step02_template_features.py  : create all features (it takes 6+ months in 64 core machine)
+# step02_template_features.py n : create features where object_id % 30 == n (it takes 10 days)
 
 
 def merge_features():

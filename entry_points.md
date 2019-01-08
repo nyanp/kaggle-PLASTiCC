@@ -1,14 +1,17 @@
+
+
 # Build features from scratch
 Run following commands:
 
 ```bash
 step01_prepare_input.py
-step02_std_features.py
-step03_redshift_features.py
-step04_template_features.py
-step05_misc_features.py
-step06_compile_features.py
-step07_train_lgbm.py
+step02_template_features.py
+step03_std_features.py
+step04_time_series_features.py
+step05_redshift_features.py
+step06_misc_features.py
+step07_run_model.py
+step08_make_shared_features.py
 ```
 
 **IMPORTANT: It takes 6~9 months with 64 core machine in step04_template_features.py.** If you want to create features on your own,
@@ -19,7 +22,7 @@ Data parallelism should be applied in this case, but iminuit and my implementati
 # Train nyanp's model from pre-compiled feature binaries
 
 ```bash
-step07_train_lgbm.py
+step07_run_model.py
 ```
 
 # Train yuval's or mamas's model from pre-compiled feature binaries

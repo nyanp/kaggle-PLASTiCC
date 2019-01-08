@@ -5,7 +5,7 @@ Our team (major tom) consists of 3 members (mamas, yuvals, nyanp), and this repo
 - Create nyanp features for yuval/mamas's model
 
 ## Environment setup
-You can run these scripts on your local machine or GCP. I used GCP for extracting template features, and local machine (Win10, Core i7-6700K, 48GB RAM) for others.
+You can run these scripts on your local machine or GCP. I used GCP for extracting template features, and local machine (Win10, Core i7-6700K, 48GB RAM, 150GB Cache) for others.
 
 ### Setup on your local machine
 1. Prepare a virtual environment for this project (python 3.5 is recommended)
@@ -15,8 +15,8 @@ You can run these scripts on your local machine or GCP. I used GCP for extractin
 ### Setup on GCP
 Recommended environment:
 - OS: Ubuntu 16.04 LTS
-- CPU: x16+
-- RAM: 120GB+
+- CPU: vCPU x 32
+- RAM: 208GB
 - Storage: 100GB+ (SSD storage is recommended)
 
 After creating GCP instance, connect it with SSL and follow these commands:
