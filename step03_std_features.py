@@ -13,7 +13,7 @@ import common
 import config
 
 debug = config.TRAINING_ONLY
-output = config.FEATURE_DIR
+output = config.FEATURE_SAVE_DIR
 cv_only = config.TRAINING_ONLY
 
 meta = common.load_metadata()

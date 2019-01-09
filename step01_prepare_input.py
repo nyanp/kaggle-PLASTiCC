@@ -52,8 +52,9 @@ def make_passband_meta():
 if __name__ == "__main__":
     with timer("Make directory"):
         mkdir(config.DATA_DIR)
-        mkdir(config.DEBUG_CSV_DIR)
-        mkdir(config.FEATURE_DIR)
+        mkdir(config.DEBUG_CSV_SAVE_DIR)
+        mkdir(config.FEATURE_LOAD_DIR)
+        mkdir(config.FEATURE_SAVE_DIR)
         mkdir(config.MODEL_DIR)
         mkdir(config.SHARE_DIR)
         mkdir(config.SUBMIT_DIR)
@@ -76,9 +77,8 @@ if __name__ == "__main__":
                           None,
                           config.DATA_DIR + "train.f")
 
-    if config.USE_TEMPLATE_FIT_FEATURES:
-        with timer("Split light curves into 30 chunks"):
-            split_lightcurve(config.DATA_DIR + "all.f", config.DATA_DIR + "all_{}.f")
+    with timer("Split light curves into 30 chunks"):
+        split_lightcurve(config.DATA_DIR + "all.f", config.DATA_DIR + "all_{}.f")
 
     with timer("Cache time(max-flux)"):
         make_passband_meta()

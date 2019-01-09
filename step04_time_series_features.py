@@ -1,4 +1,3 @@
-import gc
 from features.f3xx_tsfresh import *
 from features.f40x_astropy import *
 
@@ -6,7 +5,7 @@ import common
 import config
 
 debug = config.TRAINING_ONLY
-output = config.FEATURE_DIR
+output = config.FEATURE_SAVE_DIR
 cv_only = config.TRAINING_ONLY
 
 meta = common.load_metadata()

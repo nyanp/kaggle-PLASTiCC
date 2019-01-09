@@ -1,23 +1,31 @@
 
-DATA_DIR = "input/"
+DATA_DIR = "input/"  # Save input files in feather-format
 
-FEATURE_DIR = "features_all/"
+FEATURE_SAVE_DIR = "features_all_reproduce/"  # Save features here
 
-DEBUG_CSV_DIR = "features_all/"
+FEATURE_LOAD_DIR = "features_all/"  # Load features from here when training LightGBM models
 
-SHARE_DIR = "share/"
+DEBUG_CSV_SAVE_DIR = "features_all/"  # Save the first 1000 lines for each feature in debug mode
 
-SUBMIT_DIR = "output/"
+SHARE_DIR = "share/"  # Feature files shared with teammates
 
-MODEL_DIR = "model/"
+SUBMIT_DIR = "output/"  # Save submission file here
 
-# 1: use training data for calculation
-# 0: use all objects for pipeline
-TRAINING_ONLY = 0
+MODEL_DIR = "log/"  # Write confusion matrix, feature importance, oof prediction etc
 
-REPLICA_MODE = True
+SUBMIT_FILENAME = "experiment65.csv"
 
-USE_TEMPLATE_FIT_FEATURES = True
+TRAINING_ONLY = 0  # If 1 skip test data handling and make no submission
 
-USE_FIRST_CHUNK_FOR_TEMPLATE_FITTING = True
+USE_FIRST_CHUNK_FOR_TEMPLATE_FITTING = True  # (for debug) Use only first 300 objects to make sncosmo features
 
+TSFRESH_N_JOBS = 0  # Number of jobs in tsfresh features
+
+# 'original': reproduce my single model
+# 'salt2': remove all template features except salt2 from 'original'
+# 'no-template': remove all tepmlate features from 'original'
+# 'small': use small number of features (< 50)
+# 'best': 'original' + 2 more template features
+MODELING_MODE = 'original'
+
+USE_PSEUDO_LABEL = True

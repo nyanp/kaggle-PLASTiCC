@@ -7,7 +7,7 @@ def f517_blending_salts():
     f500 = common.load_feature('f500')
     f515 = common.load_feature('f515')
     f516 = common.load_feature('f516')
-    df = pd.merge(meta[['object_id','target','hostgal_photoz','ddf']], f500, on='object_id', how='left')
+    df = pd.merge(meta[['object_id', 'target', 'hostgal_photoz', 'ddf']], f500, on='object_id', how='left')
     df = pd.merge(df, f515, on='object_id', how='left')
     df = pd.merge(df, f516, on='object_id', how='left')
 

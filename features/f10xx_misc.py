@@ -112,7 +112,7 @@ def f1004_tsfresh_flux(input: Input, **kw):
         partial = extract_features(lc,
                                    column_id='object_id',
                                    column_value='flux',
-                                   default_fc_parameters=fcp, n_jobs=0)
+                                   default_fc_parameters=fcp, n_jobs=config.TSFRESH_N_JOBS)
         dfs.append(partial.reset_index())
         gc.collect()
 
@@ -138,7 +138,7 @@ def f1005_tsfresh_flux_per_passband(input: Input, **kw):
                                    column_sort='mjd',
                                    column_kind='passband',
                                    column_value='flux',
-                                   default_fc_parameters=fcp, n_jobs=0)
+                                   default_fc_parameters=fcp, n_jobs=config.TSFRESH_N_JOBS)
         dfs.append(partial.reset_index())
         gc.collect()
 
@@ -160,7 +160,7 @@ def f1006_tsfresh_mjd(input: Input, **kw):
         partial = extract_features(df_det,
                                    column_id='object_id',
                                    column_value='mjd',
-                                   default_fc_parameters=fcp, n_jobs=0)
+                                   default_fc_parameters=fcp, n_jobs=config.TSFRESH_N_JOBS)
         dfs.append(partial.reset_index())
         gc.collect()
 

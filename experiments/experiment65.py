@@ -1,3 +1,4 @@
+import config
 from experiments.experiments_dual import ExperimentDualModel
 from model.lgbm import LGBMModel
 
@@ -34,11 +35,43 @@ blacklist = ['2__fft_coefficient__coeff_0__attr_"abs"',
              'nugent-sn1bc_p_sn5_nugent-sn1bc_t0'
              ]
 
+extragalactic_features = {
+    'original': ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
+                 'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
+                 'f143', 'f144', 'f052', 'f053', 'f061', 'f063', 'f361', 'f600', 'f1003', 'f1080',
+                 'f1086', 'f1087', 'f500', 'f509', 'f510', 'f511', 'f512', 'f513'],
+    'salt2': ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
+              'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
+              'f143', 'f144', 'f052', 'f053', 'f061', 'f063', 'f361', 'f600', 'f1003', 'f1080',
+              'f1086', 'f1087', 'f500'],
+    'no-template': ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
+                    'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
+                    'f143', 'f144', 'f052', 'f053', 'f061', 'f063', 'f361', 'f600', 'f1003', 'f1080',
+                    'f1086', 'f1087'],
+    'small': ['f000', 'f050', 'f053', 'f100', 'f500', 'f1003'],
+    'best': ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
+             'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
+             'f143', 'f144', 'f052', 'f053', 'f061', 'f063', 'f361', 'f600', 'f1003', 'f1080',
+             'f1086', 'f1087', 'f500', 'f509', 'f510', 'f511', 'f512', 'f513', 'f515', 'f517'],
+}
+
+galactic_features = {
+    'original': ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110', 'f303',
+                 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142', 'f143', 'f144'],
+    'salt2': ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110', 'f303',
+              'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142', 'f143', 'f144'],
+    'no-template': ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110', 'f303',
+                    'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142', 'f143', 'f144'],
+    'small': ['f000', 'f050', 'f053', 'f100', 'f304', 'f400'],
+    'best': ['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110', 'f303',
+             'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142', 'f143', 'f144'],
+}
+
 
 # experiment62 + f513
 class Experiment65(ExperimentDualModel):
     def __init__(self,
-                 submit_filename='experiment65.csv',
+                 submit_filename=config.SUBMIT_FILENAME,
                  pseudo_n_loop=3,
                  save_pseudo_label=False,
                  use_extra_classifier=False,
@@ -76,12 +109,7 @@ class Experiment65(ExperimentDualModel):
         super().__init__(features_inner=['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
                                          'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
                                          'f143', 'f144'],
-                         features_extra=['f000', 'f202', 'f100', 'f002', 'f104', 'f205', 'f010', 'f203', 'f200', 'f110',
-                                         'f303', 'f304', 'f050', 'f400', 'f106', 'f107', 'f108', 'f140', 'f141', 'f142',
-                                         'f143',
-                                         'f144',
-                                         'f052', 'f053', 'f061', 'f063', 'f361', 'f600', 'f1003', 'f1080', 'f1086',
-                                         'f1087', 'f500', 'f509', 'f510', 'f511', 'f512', 'f513'],
+                         features_extra=extragalactic_features[config.MODELING_MODE],
                          model_inner=LGBMModel(nfolds=10, param=param, weight_mode='weighted',
                                                use_extra_classifier=use_extra_classifier, seed=seed),
                          model_extra=LGBMModel(nfolds=10, param=param, weight_mode='weighted',

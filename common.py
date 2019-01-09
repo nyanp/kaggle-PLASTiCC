@@ -36,21 +36,17 @@ def load_passband_metadata() -> pd.DataFrame:
 
 # "f210" => pd.DataFrame
 def load_feature(feature_id: str) -> pd.DataFrame:
-    path = config.FEATURE_DIR + feature_id + ".f"
+    path = config.FEATURE_LOAD_DIR + feature_id + ".f"
 
     return pd.read_feather(path)
 
 
 def save_feature(df: pd.DataFrame, feature_id: str, with_csv_dump: bool = False):
-    if config.REPLICA_MODE:
-        path = config.FEATURE_DIR + feature_id + "_replica.f"
-    else:
-        path = config.FEATURE_DIR + feature_id + ".f"
-
+    path = config.FEATURE_SAVE_DIR + feature_id + ".f"
     df.to_feather(path)
 
     if with_csv_dump:
-        df.head(1000).to_csv(config.DEBUG_CSV_DIR + feature_id + ".csv")
+        df.head(1000).to_csv(config.DEBUG_CSV_SAVE_DIR + feature_id + ".csv")
 
 
 def save_submit_file(pred: pd.DataFrame, filename: str):
