@@ -7,15 +7,53 @@ from typing import List
 import pandas as pd
 from tqdm import tqdm
 
+import config
 from model.lgbm import multi_weighted_logloss
 from model.model import Model
 from model.postproc import *
 from model.problem import classes
 from .confusion_matrix import save_confusion_matrix
 
-
 from typing import Dict
 import common
+
+galactic_top16 = [
+    "max(flux)",
+    "delta",
+    "diff(min(flux))_4_5",
+    "min(flux)_ch2",
+    "diff(max(flux))_1_2",
+    "diff(min(flux))_2_3",
+    "mean(detected)_ch5",
+    "flux__autocorrelation__lag_1_ch5",
+    "min(flux)_ch1",
+    "timescale_th0.35_max_ch2",
+    "flux__autocorrelation__lag_1_ch3",
+    "amp(flux)_ch2/ch5",
+    "diff(max(flux))_0_5",
+    "median(flux)_ch2",
+    "diff(min(flux))_0_1",
+    "astropy.lombscargle.timescale_ch2",
+]
+
+extragalactic_top16 = [
+    "sn_salt2_c",
+    "delta_x",
+    "sn_salt2_x1",
+    "delta_y",
+    "snana-2007Y_p_sn5_chisq",
+    "luminosity_est_diff_ch4",
+    "luminosity_est_diff_ch5",
+    "hsiao_p_sn5_chisq",
+    "luminosity_est_diff_ch0",
+    "snana-2004fe_p_sn5_chisq",
+    "median(flux)_ch2",
+    "snana-2007Y_p_sn5_snana-2007Y_z",
+    "nugent-sn2n_p_sn5_chisq",
+    "luminosity_est_diff_ch1",
+    "hostgal_photoz_err",
+    "luminosity_est_diff_ch2"
+]
 
 
 class ExperimentDualModel:
@@ -73,9 +111,13 @@ class ExperimentDualModel:
         self.logger.info('load features...')
         if self._use_inner:
             self.df_inner = self._setup(self.df_inner, features_inner, drop_feat_inner, cache_path_inner, use_cache)
+            if config.MODELING_MODE == 'small':
+                self.df_inner = self.df_inner[galactic_top16+['object_id', 'target']]
             gc.collect()
         if self._use_extra:
             self.df_extra = self._setup(self.df_extra, features_extra, drop_feat_extra, cache_path_extra, use_cache)
+            if config.MODELING_MODE == 'small':
+                self.df_extra = self.df_extra[extragalactic_top16+['object_id', 'target']]
             gc.collect()
             self.df_extra_pseudo = self.df_extra.copy()
 
@@ -197,7 +239,8 @@ class ExperimentDualModel:
 
             if self.save_pseudo_label:
                 tmp = pd.DataFrame({'object_id': pseudo.object_id})
-                tmp.reset_index(drop=True).to_feather(os.path.join(self.logdir, 'pseudo_label_class{}_round{}.f'.format(cls, round)))
+                tmp.reset_index(drop=True).to_feather(
+                    os.path.join(self.logdir, 'pseudo_label_class{}_round{}.f'.format(cls, round)))
 
         print('after update: {} training samples'.format(
             self.df_extra_pseudo[~self.df_extra_pseudo.target.isnull()].shape))
