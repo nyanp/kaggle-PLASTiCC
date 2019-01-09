@@ -21,11 +21,11 @@ USE_FIRST_CHUNK_FOR_TEMPLATE_FITTING = True  # (for debug) Use only first 300 ob
 
 TSFRESH_N_JOBS = 0  # Number of jobs in tsfresh features
 
-# 'original': reproduce my single model
+# 'original': reproduce my single model, private 0.866
 # 'salt2': remove all template features except salt2 from 'original'
 # 'no-template': remove all tepmlate features from 'original'
 # 'small': use small number of features (< 50)
-# 'best': 'original' + 2 more template features
+# 'best': 'original' + 2 more template features, private 0.860
 MODELING_MODE = 'original'
 
 USE_PSEUDO_LABEL = True
