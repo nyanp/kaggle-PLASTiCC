@@ -1,4 +1,7 @@
 import os
+import time
+from contextlib import contextmanager
+
 import pandas as pd
 
 import config
@@ -61,3 +64,12 @@ def save_submit_file(pred: pd.DataFrame, filename: str):
 def save_shared_file(features: pd.DataFrame, filename: str):
     path = os.path.join(config.SHARE_DIR, filename)
     features.to_feather(path)
+
+
+@contextmanager
+def timer(name):
+    try:
+        s = time.time()
+        yield
+    finally:
+        print("[{:5g}sec] {}".format(time.time() - s, name))

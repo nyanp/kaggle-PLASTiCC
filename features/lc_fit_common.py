@@ -9,7 +9,7 @@ from sncosmo.models import Model
 from tqdm import tqdm
 
 import config
-from util import timer
+from common import timer
 
 
 def fit_lc(model, meta, data, object_id, zbounds='estimated', clip_bounds=False, t_bounds=False, snr=5):
