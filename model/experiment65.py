@@ -1,5 +1,5 @@
 import config
-from experiments.experiments_dual import ExperimentDualModel
+from model.experiments_dual import ExperimentDualModel
 from model.lgbm import LGBMModel
 
 
