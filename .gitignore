@@ -2,7 +2,6 @@
 *.xml
 *.f
 *.csv
-*.png
 */.ipynb_checkpoints/*
 *.xlsx
 *.npy
