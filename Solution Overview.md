@@ -72,7 +72,7 @@ Without any of these features, my private LB score degragates from 0.86555 to 0.
 In the last 2 days of the competition, I noticed that my code in salt2 estimation contains bug. 
 I didn't have the chance to add fixed version to my model, but it would improved LB score a bit (see below).
 
-![](resource/LB scores.png)
+![](resource/LB_scores.png)
 
 ### Estimated redshift
 To utilize the information from `hostgal_specz`, I trained a LightGBM regressor which predicts `hostgal_specz` 
@@ -81,7 +81,7 @@ and added its oof prediction as a feature.
 Below shows a difference of redshift features (10000 randomly sampled from dataset where hostgal_specz is not null).
 We can see that estimated redshift (right) is far better than `hostgal_photoz` with the criterion of correlation with `hostgal_specz`.
 
-![](resource/estimated redshift.png)
+![](resource/estimated_redshift.png)
 
 ### Luminosity
 It is well known that luminosity distance is an important measure for estimating the type of variable objects.
