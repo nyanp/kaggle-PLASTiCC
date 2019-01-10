@@ -6,7 +6,7 @@
 - Private Leaderboard Place: 3rd
 - Name: Taiga Nomi (nyanp)
 - Location: Osaka, Japan
-- Email: Noumi.Taiga@gmail.com
+- Email: Noumi.Taiga  (gmail)
 
 ## A2. Background on me and the team
 
