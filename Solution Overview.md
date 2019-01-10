@@ -42,15 +42,15 @@ We all had different models with different approaches:
 
 ## A3. Summary
 
-I splitted data into galactic/extragalactic and trained 2 LightGBM models on them with ~200 features (with silightly different feature sets).
-I performed light curve fittng using sncosmo with various source types (salt-2, nugent, snana…),
-and use these parameters as a feature of my extragalactic model. These features gave me significant boost on my score.
+I split data into galactic/extragalactic and trained 2 LightGBM models on them with ~200 features (with slightly different feature sets).
+I performed light curve fitting using sncosmo with various source types (salt-2, nugent, snana…),
+and use these parameters as a feature of my extragalactic model. These features gave me a significant boost in my score.
 
-To handle a difference between train and test set, pseudo-labelling on class90 is used for extragalactic model.
+To handle a difference between train and test set, pseudo-labeling on class90 is used for an extragalactic model.
 
 ## A4. Features Selection / Engineering
 ### Light curve fitting features
-`sncosmo.lc_fit` is used to fitting light curve with various sources of models. Below are the list of sources I used:
+`sncosmo.lc_fit` is used to fitting the light curve with various sources of models. Below is the list of sources I used:
 
 - salt2
 - salt2-extended
@@ -60,32 +60,32 @@ To handle a difference between train and test set, pseudo-labelling on class90 i
 - snana-2007Y
 - hsiao
 
-sncosmo supports [a lot of sources](https://sncosmo.readthedocs.io/en/v1.6.x/source-list.html), but adding more templates
+sncosmo supports [a lot of sources](https://sncosmo.readthedocs.io/en/v1.6.x/source-list.html) but adding more templates
  didn't improve my local CV.
 
 I used sncosmo's built-in [lsst bandpass](https://sncosmo.readthedocs.io/en/v1.6.x/bandpass-list.html#lsst) to fit parameters.
-I tried normalized version of bandpass (because the effect of bandpass must be removed from given dataset), but it didn't work well.
+I tried the normalized version of bandpass (because the effect of bandpass must be removed from the given dataset), but it didn't work well.
 
-Light curve features played a critical role in my model. 
-Without any of these features, my private LB score degragates from 0.86555 to 0.96573!
+Light curve features played a critical role in my model.
+Without any of these features, my private LB score degradates from 0.86555 to 0.96573!
 
-In the last 2 days of the competition, I noticed that my code in salt2 estimation contains bug. 
-I didn't have the chance to add fixed version to my model, but it would improved LB score a bit (see below).
+In the last 2 days of the competition, I noticed that my code in salt2 estimation contains a bug.
+I didn't have the chance to add a fixed version to my model, but it would improve LB score a bit (see below).
 
 ![](resource/LB_scores.png)
 
 ### Estimated redshift
-To utilize the information from `hostgal_specz`, I trained a LightGBM regressor which predicts `hostgal_specz` 
+To utilize the information from `hostgal_specz`, I trained a LightGBM regressor which predicts `hostgal_specz`
 and added its oof prediction as a feature.
 
-Below shows a difference of redshift features (10000 randomly sampled from dataset where hostgal_specz is not null).
+Below shows a difference of redshift features (10000 randomly sampled from the dataset where hostgal_specz is not null).
 We can see that estimated redshift (right) is far better than `hostgal_photoz` with the criterion of correlation with `hostgal_specz`.
 
 ![](resource/estimated_redshift.png)
 
 ### Luminosity
 It is well known that luminosity distance is an important measure for estimating the type of variable objects.
-Luminosity itself is also important intrinsic property of stars. Luminosity is not given in the PLAsTiCC dataset, 
+Luminosity itself is also important intrinsic property of stars. Luminosity is not given in the PLAsTiCC dataset,
 but we can get its approximate value by calculating:
 
 ```
@@ -95,13 +95,13 @@ luminosity ~ (max(flux) - min(flux)) * luminosity_distance ** 2
 We can get luminosity distance from redshift `z` (estimated above) by calling `astropy.luminosity_distance(z)`,
 
 ### Timescales of the detected signal
-Timescales of variable event is also well known measurements.
+Timescales of a variable event are also well-known measurements.
 
 ![](resource/LSST8.6.png)
 
 *Figure 8.6 in LSST Science Book. Decay time and magnitude (can be converted from luminosity) seems good feature to classify cataclysmic variable stars.*
 
-So I added bunch of features related to timescales to capture time-series information in LightGBM.
+So I added a bunch of features related to timescales to capture time-series information in LightGBM.
 
 - (max(mjd) - min(mjd)) where detected == 1 
 - (max(mjd) - min(mjd)) where flux/flux_err > 3 
