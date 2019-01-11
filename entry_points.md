@@ -25,6 +25,6 @@ Data parallelism should be applied in this case, but iminuit and my implementati
 step07_run_model.py
 ```
 
-# Train yuval's or mamas's model from pre-compiled feature binaries
+# Train Yuval's or Mamas's model from pre-compiled feature binaries
 
-Copy feature binaries in share/ and follow the instruction in yuval's or mamas's document.
+Copy feature binaries in share/ and follow the instruction in Yuval's or Mamas's document.

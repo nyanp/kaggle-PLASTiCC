@@ -1,11 +1,15 @@
 This repository is a part of 3rd place solution in [Kaggle PLAsTiCC Astronomical Classification](https://www.kaggle.com/c/PLAsTiCC-2018).
-Our team (major tom) consists of 3 members (mamas, yuvals, nyanp), and this repository contains code to
+Our team (major tom) consists of 3 members (mamas, yuvals, nyanp), and this repository contains code of nyanp's models and features which was used by models of teammates.
 
-- Reproduce nyanp's LightGBM model
-- Create nyanp features for yuval/mamas's model
+## Directory structure
+- features/ : Feature engineering functions
+- model/ : Training LightGBM
+- lsst/ : LSST throuputs files copied from sncosmo
+- config.py : Configuration relates to I/O directory and debug mode
+- step*.py : Entrypoint of feature engineering and modeling
 
 ## Environment setup
-You can run these scripts on your local machine or GCP. I used GCP for extracting template features, and local machine (Win10, Core i7-6700K, 48GB RAM, 150GB Cache) for others.
+You can run script both Windows and Linux. If you use your local machine, ~200GB RAM is required to run.
 
 ### Setup on your local machine
 1. Prepare a virtual environment for this project (python 3.5 is recommended)
