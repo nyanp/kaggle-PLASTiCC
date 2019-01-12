@@ -120,10 +120,11 @@ So I added a bunch of features related to timescales to capture time-series info
 
 Below are the variable importance plot of my models.
 
+![](resource/top30_extragalactic.png)
+![](resource/top30_extragalactic_table.png)
 
-![](resource/top50_galactic.png)
-
-![](resource/top50_extragalactic.png)
+![](resource/top30_galactic.png)
+![](resource/top30_galactic_table.png)
 
 You can see that light curve fitting features are important in my model.
 
@@ -143,8 +144,15 @@ I indirectly used an existing template model and LSST's throughputs (automatical
 For each of galactic and extra-galactic data, Training LightGBM was performed on a 10-fold stratified split,
 and the average value of the prediction for the test data was used.
 
-After the calculation, I assigned a pseudo label to the objects in the test data whose predicted value of class90 or class42 exceeds 0.986.
-This process was repeated twice, and the third models were used for the final submission.
+After the calculation, I assigned a pseudo label to the objects in the test data whose predicted value of class90 or class42 exceeds a threshold.
+This process was repeated twice, and the third models were used for the final submission. 
+
+I used 0.985 as the threshold of this semi-supervised loop, and below is how the threshold affects LB scores and local CV.
+It shows that pseudo labeling improves both public and private LB ~0.03. 
+While the effect of the pseudo label is very sensitive to the threshold,
+It seems good to adjust the threshold so that the ratio of the number of pseudo labels to the number of original labels is from 1:1 to 10:1.
+
+![](resource/pseudo_label.png)
 
 After this semi-supervised process, a class99 calculation similar to [olivier's kernel](https://www.kaggle.com/ogrellier/plasticc-in-a-kernel-meta-and-data)
 was performed. Note that this class99 prediction only affects my single model as it is overwritten by better class99
