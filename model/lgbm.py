@@ -1,13 +1,18 @@
-from .model import *
+import gc
+
 import pandas as pd
 import numpy as np
+from lightgbm import LGBMClassifier
+from sklearn.model_selection import StratifiedKFold
+
+from .loss import lgb_multi_weighted_logloss, multi_weighted_logloss
+from .model import Model
 from .problem import class_weight
-from .loss import *
-import functools
+
 
 class LGBMModel(Model):
-    def __init__(self, param = None, random_state = 1,
-                 seed=None, nfolds = 5,
+    def __init__(self, param=None, random_state=1,
+                 seed=None, nfolds=5,
                  weight_mode='none',
                  use_extra_classifier=False,
                  n_estimators_extra_classifier=None):
@@ -24,12 +29,12 @@ class LGBMModel(Model):
                 'reg_lambda': .01,
                 'min_split_gain': 0.01,
                 'min_child_weight': 10,
-                'silent':True,
-                'verbosity':-1,
-                'learning_rate':0.1,
-                'max_depth':4,
-                'n_estimators':10000,
-                'verbose':-1
+                'silent': True,
+                'verbosity': -1,
+                'learning_rate': 0.1,
+                'max_depth': 4,
+                'n_estimators': 10000,
+                'verbose': -1
             }
         else:
             print('customized params:{}'.format(param))
@@ -55,7 +60,7 @@ class LGBMModel(Model):
         }
         return d
 
-    def fit(self, x, y, logger = None, use_extra = True):
+    def fit(self, x, y, logger=None, use_extra=True):
         for c in x:
             if x[c].count() == 0:
                 raise RuntimeError('#### column {} has no valid value!'.format(c))
@@ -81,12 +86,12 @@ class LGBMModel(Model):
         elif self.weight_mode == 'weighted':
             values = y.value_counts()
             n = {v: values[v] for v in values.index}
-            w_train = np.array([class_weight[i]/n[i] for i in y])
+            w_train = np.array([class_weight[i] / n[i] for i in y])
             w_train /= w_train.mean()
         else:
             assert self.weight_mode == 'none'
             w_train = None
-            
+
         best_iterations = []
 
         for n_fold, (train_idx, valid_idx) in enumerate(folds.split(x, y)):
@@ -109,14 +114,13 @@ class LGBMModel(Model):
             oof_preds[valid_idx, :] = clf.predict_proba(valid_x, num_iteration=clf.best_iteration_)
             best_iterations.append(clf.best_iteration_)
 
-            #dtrain = lgb.Dataset(train_x, label_to_code(train_y))
-            #dvalid = lgb.Dataset(valid_x, label_to_code(valid_y))
+            # dtrain = lgb.Dataset(train_x, label_to_code(train_y))
+            # dvalid = lgb.Dataset(valid_x, label_to_code(valid_y))
 
-            #clf = lgb.train(params=self.param, train_set=dtrain, num_boost_round=10000, valid_sets=dvalid, fobj=obj, feval=feval, early_stopping_rounds=50,
+            # clf = lgb.train(params=self.param, train_set=dtrain, num_boost_round=10000, valid_sets=dvalid, fobj=obj, feval=feval, early_stopping_rounds=50,
             #                verbose_eval=200)
 
-
-            #oof_preds[valid_idx, :] = clf.predict(valid_x, num_iteration=clf.best_iteration)
+            # oof_preds[valid_idx, :] = clf.predict(valid_x, num_iteration=clf.best_iteration)
 
             fold_importance_df = pd.DataFrame()
             fold_importance_df["feature"] = x.columns.tolist()
@@ -185,7 +189,7 @@ class LGBMModel(Model):
             self.variance = np.var(preds, axis=2)
             mean_preds = np.mean(preds, axis=2)
 
-        #for clf in self.clfs:
+        # for clf in self.clfs:
         #    preds += clf.predict_proba(x, num_iteration=clf.best_iteration_) / len(self.clfs)
 
         d = pd.DataFrame(mean_preds, columns=['class_' + str(s) for s in self.clfs[0].classes_])
@@ -203,4 +207,3 @@ class LGBMModel(Model):
 
     def get_oof_prediction(self):
         return self.oof_preds, self.y
-

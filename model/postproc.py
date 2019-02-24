@@ -37,9 +37,3 @@ def add_class99_2(pred: pd.DataFrame) -> pd.DataFrame:
 
     return pred
 
-
-def submit(pred: pd.DataFrame, path: str):
-    if 'object_id' in pred:
-        pred.to_csv(path, index=False)
-    else:
-        pred.to_csv(path, index=True)

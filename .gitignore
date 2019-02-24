@@ -1,2 +1,8 @@
 *.pyc
 *.xml
+*.f
+*.csv
+*/.ipynb_checkpoints/*
+*.xlsx
+*.npy
+*.feather

@@ -3,21 +3,22 @@ import time
 from termcolor import colored
 import traceback
 import gc
+import os
 import numpy as np
+
+import common
 
 
 class Input:
-    def __init__(self, meta, passband, lc, lombscargle):
+    def __init__(self, meta, passband, lc):
         self.meta = meta
         self.passband = passband
         self.lc = lc
-        self.ls = lombscargle
-
 
 
 def unstack(aggs):
     if 'passband' in aggs and 'object_id' in aggs:
-        aggs.set_index(['object_id','passband'], inplace=True)
+        aggs.set_index(['object_id', 'passband'], inplace=True)
 
     aggs = aggs.unstack()
     aggs.columns = [e[0] + '_ch' + str(e[1]) for e in aggs.columns]
@@ -45,9 +46,9 @@ def aggregate_by_id(lc, col, agg):
 def diff_among_ch(meta: pd.DataFrame, agg, target='flux', skip=1, prefix=''):
     cols = []
     for c in range(6 - skip):
-        n = prefix+'{}({})_ch{}'.format(agg, target, c + skip)
-        p = prefix+'{}({})_ch{}'.format(agg, target, c)
-        dst = prefix+'diff({}({}))_{}_{}'.format(agg, target, c, c + skip)
+        n = prefix + '{}({})_ch{}'.format(agg, target, c + skip)
+        p = prefix + '{}({})_ch{}'.format(agg, target, c)
+        dst = prefix + 'diff({}({}))_{}_{}'.format(agg, target, c, c + skip)
         meta[dst] = meta[n] - meta[p]
         cols.append(dst)
 
@@ -63,7 +64,7 @@ def requires_one(meta, feature_name, src_file, target_dir, on='object_id', debug
     if debug:
         print('load {} and merge to get {}'.format(src_file, feature_name))
 
-    d = pd.read_feather(target_dir + '/' + src_file)
+    d = pd.read_feather(os.path.join(target_dir, src_file))
 
     len_before = len(meta)
     meta = pd.merge(meta, d, on=on, how='left')
@@ -84,14 +85,17 @@ def requires(meta, feature_name, src_file, target_dir, on='object_id', debug=Fal
 def percentile(n):
     def percentile_(x):
         return np.percentile(x, n)
+
     percentile_.__name__ = 'percentile_{}'.format(n)
     return percentile_
+
 
 def _top(f):
     if isinstance(f, list):
         return f[0]
     else:
         return f
+
 
 def feature(name, required_feature=None, required_feature_in=None):
     def decorator(func):
@@ -102,18 +106,20 @@ def feature(name, required_feature=None, required_feature_in=None):
 
                 meta = kwargs['input'].meta
                 if required_feature is not None and _top(required_feature) not in meta:
-                    kwargs['input'].meta = requires(meta, required_feature, required_feature_in, kwargs['target_dir'], debug=kwargs['debug'])
+                    kwargs['input'].meta = requires(meta, required_feature, required_feature_in, kwargs['target_dir'],
+                                                    debug=kwargs['debug'])
 
                 ret = func(*args, **kwargs)
 
                 if kwargs['debug']:
-                    ret.head(1000).to_csv(kwargs['target_dir'] + '/{}.csv'.format(name))
+                    with_csv = True
+                else:
+                    with_csv = False
 
-                ret.reset_index(drop=True).to_feather(kwargs['target_dir'] + '/{}.f'.format(name))
+                common.save_feature(ret.reset_index(drop=True), name, with_csv)
 
                 print('end : {} (time: {})'.format(func.__name__, time.time() - s))
                 gc.collect()
-                return ret
             except Exception as e:
                 print(colored('error on function {}'.format(func.__name__), 'red'))
                 print(type(e))

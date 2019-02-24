@@ -55,6 +55,6 @@ def f108_min_flux_diff1_ch(input: Input, debug=True, target_dir='.'):
 
 
 @feature('f109', required_feature='min(flux)_ch2', required_feature_in='f000.f')
-def f109_min_flux_diff1_ch(input: Input, debug=True, target_dir='.'):
+def f109_min_flux_diff2_ch(input: Input, debug=True, target_dir='.'):
     dst = diff_among_ch(input.meta, 'min', 'flux', 2)
     return dst

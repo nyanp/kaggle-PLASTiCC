@@ -16,10 +16,8 @@ def f001_agg_ch_flux_err(input: Input, debug=True, target_dir='.'):
     return aggs
 
 
-
 @feature('f002')
 def f002_agg_ch_detected(input: Input, debug=True, target_dir='.'):
     aggs = aggregate_by_id_passbands(input.lc, 'detected', ['mean', 'std'])
 
     return aggs
-
